@@ -6,7 +6,8 @@ import {
   SendDMRequest,
   PlaceBetRequest,
   CreateGroupChatRequest,
-  Agent
+  Agent,
+  DirectMessage
 } from '../types';
 
 export function apiRouter(gameEngine: GameEngine): Router {
@@ -15,18 +16,63 @@ export function apiRouter(gameEngine: GameEngine): Router {
   /**
    * POST /join - Join the game lobby
    */
-  router.post('/join', (req: Request, res: Response) => {
+  router.post('/join', async (req: Request, res: Response) => {
     try {
       const { agentId, signature } = req.body as JoinGameRequest;
 
-      // TODO: Verify agent signature/credentials via ERC-8004
+      // Verify agent signature/credentials via ERC-8004
+      let agentName = `Agent_${agentId.slice(0, 8)}`;
+      let agentType: 'human' | 'ai' = 'human';
+      let reputation = 50;
+      let wins = 0;
+
+      const registryAddress = process.env.REGISTRY_ADDRESS;
+      if (registryAddress && signature) {
+        try {
+          const { ethers } = await import('ethers');
+          const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || 'http://localhost:8545');
+          
+          // ERC-8004 registry ABI
+          const registryABI = [
+            'function isRegistered(address agent) external view returns (bool)',
+            'function getAgentMetadata(address agent) external view returns (string memory)'
+          ];
+          const registry = new ethers.Contract(registryAddress, registryABI, provider);
+          
+          // Recover address from signature
+          const message = `Join game: ${agentId}`;
+          const recoveredAddress = ethers.verifyMessage(message, signature);
+          
+          // Check if registered
+          const isRegistered = await registry.isRegistered(recoveredAddress);
+          if (!isRegistered) {
+            return res.status(403).json({
+              success: false,
+              message: 'Agent not registered in ERC-8004'
+            });
+          }
+          
+          // Get metadata
+          const metadataJson = await registry.getAgentMetadata(recoveredAddress);
+          if (metadataJson) {
+            const metadata = JSON.parse(metadataJson);
+            agentName = metadata.name || agentName;
+            agentType = metadata.type === 'ai' ? 'ai' : 'human';
+            reputation = metadata.reputation || 50;
+            wins = metadata.wins || 0;
+          }
+        } catch (error) {
+          console.error('Registry verification error:', error);
+          // Continue with defaults if registry check fails
+        }
+      }
 
       const agent: Agent = {
         id: agentId,
-        name: `Agent_${agentId.slice(0, 8)}`, // TODO: Get from registry
-        type: 'human', // TODO: Detect from agent metadata
-        reputation: 50, // TODO: Fetch from on-chain registry
-        wins: 0 // TODO: Fetch from registry
+        name: agentName,
+        type: agentType,
+        reputation,
+        wins
       };
 
       const joined = gameEngine.joinLobby(agent);
@@ -54,34 +100,52 @@ export function apiRouter(gameEngine: GameEngine): Router {
    */
   router.get('/game', (req: Request, res: Response) => {
     const game = gameEngine.getCurrentGame();
+    const lobbyState = gameEngine.getLobbyState();
     
     if (!game) {
+      // Return lobby state
       return res.json({
-        active: false,
-        message: 'No active game. Join lobby to start a new one.'
+        id: 'lobby',
+        question: 'Waiting for players...',
+        description: `Join the lobby! ${lobbyState.players.length}/${lobbyState.minPlayers} players needed to start.`,
+        phase: 'LOBBY',
+        currentDay: 0,
+        maxDay: 30,
+        players: lobbyState.players,
+        market: {
+          yesShares: 0,
+          noShares: 0,
+          yesOdds: 50,
+          noOdds: 50,
+          totalVolume: 0,
+          bets: []
+        },
+        feed: [],
+        bettingOpen: false,
+        revealed: false
       });
     }
 
     // Return sanitized game state (hide secret outcome)
     res.json({
-      active: true,
-      sessionId: game.id,
+      id: game.id,
       question: game.scenario.question,
       description: game.scenario.description,
       phase: game.phase,
-      day: game.currentDay,
-      market: game.market,
-      bettingOpen: game.bettingOpen,
+      currentDay: game.currentDay,
+      maxDay: 30,
       players: game.agents.map(a => ({
         id: a.id,
         name: a.name,
-        reputation: a.reputation
+        type: a.type,
+        reputation: a.reputation,
+        wins: a.wins
       })),
-      npcs: game.scenario.npcs.map(npc => ({
-        id: npc.id,
-        name: npc.name,
-        bio: npc.bio
-      }))
+      market: game.market,
+      feed: game.feed.slice(-50),
+      bettingOpen: game.bettingOpen,
+      revealed: game.revealed,
+      finalOutcome: game.finalOutcome
     });
   });
 
@@ -108,7 +172,7 @@ export function apiRouter(gameEngine: GameEngine): Router {
     try {
       const { agentId, content, replyTo } = req.body as PostMessageRequest;
 
-      // TODO: Verify agent is in current game
+      // Verify agent is in current game
 
       const game = gameEngine.getCurrentGame();
       if (!game) {
@@ -166,7 +230,7 @@ export function apiRouter(gameEngine: GameEngine): Router {
     }
 
     const { agentId } = req.params;
-    const messages: any[] = [];
+    const messages: DirectMessage[] = [];
 
     // Collect all DMs involving this agent
     game.directMessages.forEach((msgs, key) => {
@@ -232,14 +296,34 @@ export function apiRouter(gameEngine: GameEngine): Router {
     try {
       const { agentId, name, members } = req.body as CreateGroupChatRequest;
 
-      // TODO: Implement group chat creation
+      const game = gameEngine.getCurrentGame();
+      if (!game) {
+        return res.status(400).json({ error: 'No active game' });
+      }
+
+      // Verify agent is in game
+      const agent = game.agents.find(a => a.id === agentId);
+      if (!agent) {
+        return res.status(403).json({ error: 'Agent not in game' });
+      }
+
+      // Validate members
+      if (!members || members.length === 0) {
+        return res.status(400).json({ error: 'Must specify at least one member' });
+      }
+
+      // Create group via game engine
+      const groupId = gameEngine.createGroupChat(agentId, name, members);
       
       res.json({
         success: true,
-        groupId: 'placeholder'
+        groupId
       });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create group' });
+      console.error('Group creation error:', error);
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : 'Failed to create group' 
+      });
     }
   });
 

@@ -5,26 +5,22 @@ import { GameBoard } from './components/GameBoard';
 import { useGameStore } from './store/gameStore';
 import { api } from './services/api';
 import { wsService } from './services/websocket';
-import { GamePhase } from './types/game';
+import { GamePhase, type GameState } from './types/game';
 
 function App() {
-  const { gameState, playerId, setGameState, setConnected, addPost, updateMarket } = useGameStore();
+  const { gameState, playerId, setGameState, setConnected } = useGameStore();
 
   useEffect(() => {
     // Initial game state fetch
     const fetchGameState = async () => {
-      try {
-        const state = await api.getGameState();
-        setGameState(state);
-      } catch (error) {
-        console.error('Failed to fetch game state:', error);
-      }
+      const state = await api.getGameState();
+      setGameState(state);
     };
 
     fetchGameState();
 
-    // Poll for game state every 5 seconds
-    const interval = setInterval(fetchGameState, 5000);
+    // Poll for game state every 30 seconds as backup (WebSocket is primary)
+    const interval = setInterval(fetchGameState, 30000);
 
     return () => clearInterval(interval);
   }, [setGameState]);
@@ -35,27 +31,20 @@ function App() {
       wsService.connect(playerId);
       setConnected(true);
 
-      // Listen for game state updates
+      // Listen for game state updates (full state replacement)
       wsService.on('game_state', (data) => {
-        setGameState(data);
+        setGameState(data as GameState);
       });
 
-      // Listen for new posts
-      wsService.on('new_post', (data) => {
-        addPost(data);
-      });
-
-      // Listen for market updates
-      wsService.on('market_update', (data) => {
-        updateMarket(data);
-      });
+      // Note: We rely on full game_state updates instead of incremental updates
+      // to avoid duplicate data between WebSocket and polling
 
       return () => {
         wsService.disconnect();
         setConnected(false);
       };
     }
-  }, [playerId, setConnected, setGameState, addPost, updateMarket]);
+  }, [playerId, setConnected, setGameState]);
 
   const showLobby = !gameState || gameState.phase === GamePhase.LOBBY || !playerId;
 

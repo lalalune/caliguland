@@ -62,11 +62,17 @@ export class A2AClientService extends Service {
     
     if (!this.serverUrl) {
       // Try to get from discovery service
-      const discovery = runtime.getService('game-discovery') as any;
-      if (discovery && discovery.getGameServer) {
-        const gameServer = discovery.getGameServer();
-        if (gameServer) {
-          this.serverUrl = gameServer.url;
+      const discovery = runtime.getService('game-discovery');
+      if (discovery && typeof discovery === 'object' && 'getGameServer' in discovery) {
+        const getGameServer = (discovery as Record<string, unknown>).getGameServer;
+        if (typeof getGameServer === 'function') {
+          const gameServer = getGameServer();
+          if (gameServer && typeof gameServer === 'object' && 'url' in gameServer) {
+            const url = (gameServer as Record<string, unknown>).url;
+            if (typeof url === 'string') {
+              this.serverUrl = url;
+            }
+          }
         }
       }
     }
@@ -164,8 +170,8 @@ export class A2AClientService extends Service {
         handler: async (
           rt: IAgentRuntime,
           message: Memory,
-          _state?: any,
-          _options?: any,
+          _state?: Record<string, unknown>,
+          _options?: Record<string, unknown>,
           callback?: HandlerCallback
         ): Promise<ActionResult> => {
           try {
@@ -412,31 +418,40 @@ export class A2AClientService extends Service {
   }
 
   private extractTextFromA2AResponse(result: unknown): string {
-    const r = result as any;
-    
-    // Try different response formats
-    if (r && typeof r === 'object') {
-      // Task format
-      if (r.kind === 'task' && r.status?.message?.parts) {
-        const textParts = r.status.message.parts
-          .filter((p: any) => p.kind === 'text')
-          .map((p: any) => p.text);
-        if (textParts.length > 0) return textParts.join(' ');
+    if (!result || typeof result !== 'object') return 'OK';
+
+    const r = result as Record<string, unknown>;
+
+    // Task format
+    if (r.kind === 'task' && r.status && typeof r.status === 'object') {
+      const status = r.status as Record<string, unknown>;
+      if (status.message && typeof status.message === 'object') {
+        const message = status.message as Record<string, unknown>;
+        if (Array.isArray(message.parts)) {
+          const textParts = message.parts
+            .filter((p: unknown): p is { kind: string; text: string } => {
+              return p !== null && typeof p === 'object' && 'kind' in p && (p as Record<string, unknown>).kind === 'text' && 'text' in p;
+            })
+            .map((p) => p.text);
+          if (textParts.length > 0) return textParts.join(' ');
+        }
       }
-      
-      // Message format
-      if (r.role === 'agent' && Array.isArray(r.parts)) {
-        const textParts = r.parts
-          .filter((p: any) => p.kind === 'text')
-          .map((p: any) => p.text);
-        if (textParts.length > 0) return textParts.join(' ');
-      }
-      
-      // Simple format
-      if (r.message) return r.message;
-      if (r.text) return r.text;
     }
-    
+
+    // Message format
+    if (r.role === 'agent' && Array.isArray(r.parts)) {
+      const textParts = r.parts
+        .filter((p: unknown): p is { kind: string; text: string } => {
+          return p !== null && typeof p === 'object' && 'kind' in p && (p as Record<string, unknown>).kind === 'text' && 'text' in p;
+        })
+        .map((p) => p.text);
+      if (textParts.length > 0) return textParts.join(' ');
+    }
+
+    // Simple format
+    if ('message' in r && typeof r.message === 'string') return r.message;
+    if ('text' in r && typeof r.text === 'string') return r.text;
+
     return 'OK';
   }
 

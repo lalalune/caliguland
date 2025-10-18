@@ -84,11 +84,21 @@ export class BettingService extends Service {
         amount
       });
 
+      // Extract odds from result
+      let odds = 0;
+      if (result.data && typeof result.data === 'object') {
+        const data = result.data as Record<string, unknown>;
+        if (data.market && typeof data.market === 'object') {
+          const market = data.market as Record<string, unknown>;
+          odds = outcome === 'YES' ? (market.yesOdds as number || 0) : (market.noOdds as number || 0);
+        }
+      }
+
       const position: BettingPosition = {
         gameId,
         outcome,
         amount,
-        odds: 0, // TODO: Extract from result
+        odds,
         timestamp: Date.now()
       };
 

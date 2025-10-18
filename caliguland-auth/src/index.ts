@@ -2,7 +2,6 @@ import express, { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
-import { DstackSDK } from '@phala/dstack-sdk';
 
 const app = express();
 
@@ -31,22 +30,10 @@ let PASSWORD_HASH: string;
   console.log('✅ Password automatically hashed from VIBEVM_PASSWORD');
 })();
 
-// JWT Secret Cache
-let jwtSecret: string | null = null;
-
-async function getJwtSecret(): Promise<string> {
-  if (jwtSecret) return jwtSecret;
-
-  try {
-    const dstack = new DstackSDK();
-    const response = await dstack.deriveKey(JWT_KEY_PATH);
-    jwtSecret = response.key;
-    console.log(`✅ JWT key derived from Dstack TEE at path: ${JWT_KEY_PATH}`);
-    return jwtSecret;
-  } catch (error) {
-    console.error('❌ Error deriving JWT key:', error);
-    throw new Error('Failed to derive JWT key');
-  }
+// JWT Secret - deterministic for development
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET || 'caliguland-development-secret-change-in-production';
+  return secret;
 }
 
 // Proxy headers middleware (fix redirect port issues)
@@ -217,7 +204,7 @@ app.post('/login', async (req: Request, res: Response) => {
     }
 
     // Generate JWT token
-    const secret = await getJwtSecret();
+    const secret = getJwtSecret();
     const expiry = Math.floor(Date.now() / 1000) + (JWT_EXPIRY_HOURS * 3600);
     
     const token = jwt.sign(
@@ -249,29 +236,22 @@ app.post('/login', async (req: Request, res: Response) => {
 });
 
 // Validate JWT (called by nginx auth_request)
-app.get('/auth/validate', async (req: Request, res: Response) => {
-  try {
-    const token = req.cookies.vibevm_session;
+app.get('/auth/validate', (req: Request, res: Response) => {
+  const token = req.cookies.vibevm_session;
 
-    if (!token) {
-      return res.status(401).json({ detail: 'No session cookie' });
-    }
-
-    const secret = await getJwtSecret();
-    const payload = jwt.verify(token, secret, { algorithms: ['HS256'] }) as any;
-
-    // Validate purpose
-    if (payload.purpose !== JWT_PURPOSE) {
-      return res.status(401).json({ detail: 'Invalid token purpose' });
-    }
-
-    res.json({ status: 'valid', user: payload.sub });
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      return res.status(401).json({ detail: 'Session expired' });
-    }
-    return res.status(401).json({ detail: `Invalid token: ${error}` });
+  if (!token) {
+    return res.status(401).json({ detail: 'No session cookie' });
   }
+
+  const secret = getJwtSecret();
+  const payload = jwt.verify(token, secret, { algorithms: ['HS256'] }) as {sub: string; purpose: string};
+
+  // Validate purpose
+  if (payload.purpose !== JWT_PURPOSE) {
+    return res.status(401).json({ detail: 'Invalid token purpose' });
+  }
+
+  res.json({ status: 'valid', user: payload.sub });
 });
 
 // Health check

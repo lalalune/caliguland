@@ -40,7 +40,7 @@ export function Feed() {
 
       {/* Feed Messages */}
       <div className="flex-1 overflow-y-auto space-y-3 mb-4" data-cy="feed-messages">
-        {gameState?.feed.map((post: Post) => (
+        {gameState?.feed?.map((post: Post) => (
           <div 
             key={post.id}
             className={`p-3 rounded-lg ${

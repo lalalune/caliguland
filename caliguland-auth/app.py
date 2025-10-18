@@ -37,7 +37,7 @@ class ProxyHeadersMiddleware(BaseHTTPMiddleware):
         # Strip port from Location header in redirects (if present)
         if "location" in response.headers:
             location = response.headers["location"]
-            # Remove :port from URLs like https://domain:8080/path -> https://domain/path
+            # Remove :port from URLs like https://domain:6666/path -> https://domain/path
             # Pattern matches: (scheme)://(domain):port(/path)
             fixed_location = re.sub(r'(https?://[^/:]+):\d+(/.*)', r'\1\2', location)
             if fixed_location != location:

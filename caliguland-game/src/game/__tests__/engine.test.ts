@@ -89,32 +89,138 @@ describe('GameEngine', () => {
         expect(game?.agents.length).toBe(2);
         done();
       }, 11000); // Wait for first tick
-    });
+    }, 15000); // 15 second timeout for this test
   });
 
   describe('Betting', () => {
-    it('should accept valid bets', () => {
-      // Setup game with mock
-      // TODO: Implement after game start mocking
-    });
+    it('should accept valid bets', async () => {
+      // Add players
+      const agent1: Agent = { id: 'agent-1', name: 'Agent 1', type: 'human', reputation: 50, wins: 0 };
+      const agent2: Agent = { id: 'agent-2', name: 'Agent 2', type: 'human', reputation: 50, wins: 0 };
+      
+      engine.joinLobby(agent1);
+      engine.joinLobby(agent2);
+      
+      // Start game
+      await engine.start();
+      
+      // Wait for game to initialize
+      await new Promise(r => setTimeout(r, 11000));
+      
+      const game = engine.getCurrentGame();
+      expect(game).not.toBeNull();
+      expect(game?.bettingOpen).toBe(true);
+      
+      // Place bet
+      const betPlaced = engine.placeBet('agent-1', Outcome.YES, 100);
+      expect(betPlaced).toBe(true);
+      
+      // Verify bet recorded
+      const bets = game?.market.bets.filter(b => b.agentId === 'agent-1');
+      expect(bets?.length).toBeGreaterThan(0);
+    }, 15000);
 
-    it('should update market odds after bet', () => {
-      // TODO: Implement
-    });
+    it('should update market odds after bet', async () => {
+      const agent1: Agent = { id: 'agent-1', name: 'Agent 1', type: 'human', reputation: 50, wins: 0 };
+      const agent2: Agent = { id: 'agent-2', name: 'Agent 2', type: 'human', reputation: 50, wins: 0 };
+      
+      engine.joinLobby(agent1);
+      engine.joinLobby(agent2);
+      await engine.start();
+      await new Promise(r => setTimeout(r, 11000));
+      
+      const game = engine.getCurrentGame();
+      const initialYesOdds = game?.market.yesOdds || 0;
+      
+      // Place large YES bet
+      engine.placeBet('agent-1', Outcome.YES, 1000);
+      
+      // Verify odds changed
+      const newYesOdds = game?.market.yesOdds || 0;
+      expect(newYesOdds).not.toBe(initialYesOdds);
+    }, 15000);
 
-    it('should reject bets after betting closes', () => {
-      // TODO: Implement
-    });
+    it('should reject bets after betting closes', async () => {
+      const agent1: Agent = { id: 'agent-1', name: 'Agent 1', type: 'human', reputation: 50, wins: 0 };
+      const agent2: Agent = { id: 'agent-2', name: 'Agent 2', type: 'human', reputation: 50, wins: 0 };
+      
+      engine.joinLobby(agent1);
+      engine.joinLobby(agent2);
+      await engine.start();
+      await new Promise(r => setTimeout(r, 11000));
+      
+      const game = engine.getCurrentGame();
+      
+      // Manually close betting
+      if (game) {
+        game.bettingOpen = false;
+      }
+      
+      // Try to place bet
+      const betPlaced = engine.placeBet('agent-1', Outcome.YES, 100);
+      expect(betPlaced).toBe(false);
+    }, 15000);
   });
 
   describe('Feed', () => {
-    it('should add posts to feed', () => {
-      // TODO: Implement
-    });
+    it('should add posts to feed', async () => {
+      const agent1: Agent = { id: 'agent-1', name: 'Agent 1', type: 'human', reputation: 50, wins: 0 };
+      const agent2: Agent = { id: 'agent-2', name: 'Agent 2', type: 'human', reputation: 50, wins: 0 };
+      
+      engine.joinLobby(agent1);
+      engine.joinLobby(agent2);
+      await engine.start();
+      await new Promise(r => setTimeout(r, 11000));
+      
+      const game = engine.getCurrentGame();
+      const initialFeedSize = game?.feed.length || 0;
+      
+      // Post to feed
+      engine.postToFeed({
+        authorId: 'agent-1',
+        authorName: 'Agent 1',
+        content: 'Test post'
+      });
+      
+      const newFeedSize = game?.feed.length || 0;
+      expect(newFeedSize).toBe(initialFeedSize + 1);
+      
+      // Verify post content
+      const lastPost = game?.feed[game.feed.length - 1];
+      expect(lastPost?.content).toBe('Test post');
+      expect(lastPost?.authorId).toBe('agent-1');
+    }, 15000);
 
-    it('should broadcast new posts', () => {
-      // TODO: Implement
-    });
+    it('should broadcast new posts', async () => {
+      let broadcastCount = 0;
+      
+      const agent1: Agent = { id: 'agent-1', name: 'Agent 1', type: 'human', reputation: 50, wins: 0 };
+      const agent2: Agent = { id: 'agent-2', name: 'Agent 2', type: 'human', reputation: 50, wins: 0 };
+      
+      engine.joinLobby(agent1);
+      engine.joinLobby(agent2);
+      
+      // Set broadcast function
+      engine.setBroadcastFunctions(
+        (msg) => { broadcastCount++; },
+        (id, msg) => {}
+      );
+      
+      await engine.start();
+      await new Promise(r => setTimeout(r, 11000));
+      
+      const initialCount = broadcastCount;
+      
+      // Post to feed
+      engine.postToFeed({
+        authorId: 'agent-1',
+        authorName: 'Agent 1',
+        content: 'Broadcast test'
+      });
+      
+      // Verify broadcast was called
+      expect(broadcastCount).toBeGreaterThan(initialCount);
+    }, 15000);
   });
 });
 

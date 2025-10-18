@@ -16,16 +16,13 @@ help:
 	@echo ""
 
 install:
-	@echo "📦 Installing dependencies..."
-	@cd caliguland-auth && npm install
-	@cd caliguland-game && npm install
-	@cd examples && npm install
+	@echo "📦 Installing dependencies (bun workspaces)..."
+	@bun install
 	@echo "✅ Dependencies installed"
 
 build:
 	@echo "🏗️  Building services..."
-	@cd caliguland-auth && npm run build
-	@cd caliguland-game && npm run build
+	@bun run build
 	@echo "✅ Build complete"
 
 dev:
@@ -42,9 +39,9 @@ start:
 	@echo "✅ Services started!"
 	@echo ""
 	@echo "📍 Access points:"
-	@echo "   - Main UI: http://localhost:8080"
-	@echo "   - Login: http://localhost:8080/login"
-	@echo "   - Game: http://localhost:8080/game"
+	@echo "   - Main UI: http://localhost:6666"
+	@echo "   - Login: http://localhost:6666/login"
+	@echo "   - Game: http://localhost:6666/game"
 	@echo "   - Game API: http://localhost:8000/api/v1/docs"
 	@echo ""
 	@echo "Run 'make logs' to view logs"
@@ -56,7 +53,10 @@ stop:
 
 clean:
 	@echo "🧹 Cleaning build artifacts..."
+	@rm -rf node_modules bun.lock
+	@rm -rf caliguland-agents/dist caliguland-agents/node_modules
 	@rm -rf caliguland-auth/dist caliguland-auth/node_modules
+	@rm -rf caliguland-frontend/dist caliguland-frontend/node_modules
 	@rm -rf caliguland-game/dist caliguland-game/node_modules
 	@rm -rf examples/node_modules
 	@docker-compose down -v
@@ -64,7 +64,7 @@ clean:
 
 test:
 	@echo "🧪 Running tests..."
-	@cd caliguland-game && npm test || echo "No tests configured yet"
+	@bun run test
 
 logs:
 	@docker-compose logs -f
@@ -78,13 +78,19 @@ restart:
 
 # Development helpers
 dev-auth:
-	@cd caliguland-auth && npm run dev
+	@bun run dev:auth
 
 dev-game:
-	@cd caliguland-game && npm run dev
+	@bun run dev:game
 
-dev-agent:
-	@cd examples && npm run simple-agent
+dev-frontend:
+	@bun run dev:frontend
+
+dev-agents:
+	@bun run dev:agents
+
+dev-all:
+	@bun run dev:all
 
 # Production helpers
 prod-build:

@@ -1,5 +1,5 @@
 import { useGameStore } from '../store/gameStore';
-import { Feed } from './Feed';
+import { SocialPanel } from './SocialPanel';
 import { BettingPanel } from './BettingPanel';
 import { MarketDisplay } from './MarketDisplay';
 import { PlayersList } from './PlayersList';
@@ -16,9 +16,14 @@ export function GameBoard() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Left Column - Game Info & Market */}
-      <div className="lg:col-span-1 space-y-6">
+    <div className="flex gap-6 h-[calc(100vh-200px)]">
+      {/* Left Side - Social & Chat (Wide, flexible) */}
+      <div className="flex-1 min-w-0">
+        <SocialPanel />
+      </div>
+
+      {/* Right Side - Betting & Market (Fixed width) */}
+      <div className="w-[400px] flex-shrink-0 space-y-6 overflow-y-auto">
         <div className="card">
           <h3 className="text-xl font-bold mb-4">Question</h3>
           <p className="text-gray-300 mb-4">{gameState.question}</p>
@@ -27,17 +32,9 @@ export function GameBoard() {
 
         <MarketDisplay />
         
-        <PlayersList players={gameState.players} />
-      </div>
-
-      {/* Middle Column - Feed */}
-      <div className="lg:col-span-1">
-        <Feed />
-      </div>
-
-      {/* Right Column - Betting Panel */}
-      <div className="lg:col-span-1">
         <BettingPanel />
+        
+        <PlayersList players={gameState.players ?? []} />
       </div>
     </div>
   );

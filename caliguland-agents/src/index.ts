@@ -14,7 +14,9 @@ import sqlPlugin from '@elizaos/plugin-sql';
 // Import characters
 import analyst from '../characters/analyst.json';
 import contrarian from '../characters/contrarian.json';
-// TODO: Import remaining characters when created
+import insider from '../characters/insider.json';
+import social from '../characters/social.json';
+import random from '../characters/random.json';
 
 const activeRuntimes: Map<string, AgentRuntime> = new Map();
 
@@ -89,10 +91,9 @@ async function startAgents(): Promise<void> {
   const characters = [
     { character: analyst as unknown as Character, envVar: 'PLAYER1_PRIVATE_KEY' },
     { character: contrarian as unknown as Character, envVar: 'PLAYER2_PRIVATE_KEY' },
-    // TODO: Add remaining characters
-    // { character: insider as unknown as Character, envVar: 'PLAYER3_PRIVATE_KEY' },
-    // { character: social as unknown as Character, envVar: 'PLAYER4_PRIVATE_KEY' },
-    // { character: random as unknown as Character, envVar: 'PLAYER5_PRIVATE_KEY' },
+    { character: insider as unknown as Character, envVar: 'PLAYER3_PRIVATE_KEY' },
+    { character: social as unknown as Character, envVar: 'PLAYER4_PRIVATE_KEY' },
+    { character: random as unknown as Character, envVar: 'PLAYER5_PRIVATE_KEY' },
   ];
 
   // Initialize all runtimes

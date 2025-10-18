@@ -254,8 +254,112 @@ export class ScenarioGenerator {
   }
 
   private generateElectionTimeline(outcome: Outcome): GameEvent[] {
-    // TODO: Implement election scenario timeline
-    return [];
+    const events: GameEvent[] = [
+      {
+        day: 1,
+        type: 'announcement',
+        author: 'donald-stump',
+        content: 'President Stump: These accusations are FAKE NEWS! I will not resign. Witch hunt!',
+        isPublic: true
+      },
+      {
+        day: 1,
+        type: 'news',
+        author: 'media-megan',
+        content: 'BREAKING: Multiple sources confirm scandal investigation underway. Full story at 6PM.',
+        isPublic: true
+      },
+      {
+        day: 5,
+        type: 'news',
+        author: 'media-megan',
+        content: 'Investigation reveals concerning documents. Congressional hearing scheduled for Day 20.',
+        isPublic: true
+      },
+      {
+        day: 8,
+        type: 'announcement',
+        author: 'donald-stump',
+        content: 'President Stump: Approval ratings at all-time high! My supporters stand with me. #StayStrong',
+        isPublic: true
+      }
+    ];
+
+    // Day 15: Major development based on outcome
+    if (outcome === Outcome.YES) {
+      events.push({
+        day: 15,
+        type: 'news',
+        author: 'media-megan',
+        content: '🔥 BOMBSHELL: New evidence surfaces. Multiple administration officials resigning in protest.',
+        isPublic: true
+      });
+      events.push({
+        day: 16,
+        type: 'announcement',
+        author: 'donald-stump',
+        content: 'President Stump: I take full responsibility. Will address the nation tomorrow.',
+        isPublic: true
+      });
+    } else {
+      events.push({
+        day: 15,
+        type: 'news',
+        author: 'media-megan',
+        content: 'UPDATE: Key witness recants testimony. Investigation losing momentum.',
+        isPublic: true
+      });
+      events.push({
+        day: 16,
+        type: 'announcement',
+        author: 'donald-stump',
+        content: 'President Stump: Told you it was fake! Vindication! My enemies are exposed.',
+        isPublic: true
+      });
+    }
+
+    // Day 22: Congressional hearing
+    events.push({
+      day: 22,
+      type: 'news',
+      author: 'media-megan',
+      content: outcome === Outcome.YES
+        ? 'Congressional hearing: Bipartisan calls for resignation. Impeachment vote scheduled.'
+        : 'Congressional hearing: Insufficient evidence. Case may be dismissed.',
+      isPublic: true
+    });
+
+    // Day 26: Party position
+    events.push({
+      day: 26,
+      type: 'announcement',
+      author: 'donald-stump',
+      content: outcome === Outcome.YES
+        ? 'President Stump: Meeting with party leaders. Considering all options for the country.'
+        : 'President Stump: My party stands with me. This witch hunt ends NOW!',
+      isPublic: true
+    });
+
+    // Day 29: Final hint
+    if (outcome === Outcome.YES) {
+      events.push({
+        day: 29,
+        type: 'news',
+        author: 'media-megan',
+        content: '🚨 BREAKING: President Stump cancels all public appearances. Resignation speech rumored for tomorrow.',
+        isPublic: true
+      });
+    } else {
+      events.push({
+        day: 29,
+        type: 'news',
+        author: 'media-megan',
+        content: 'UPDATE: Approval ratings recovering. President appears to have weathered the storm.',
+        isPublic: true
+      });
+    }
+
+    return events;
   }
 }
 

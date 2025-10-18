@@ -11,20 +11,22 @@ export enum Outcome {
 
 export enum GamePhase {
   LOBBY = 'LOBBY',
-  EARLY = 'EARLY',      // Days 1-10
-  MID = 'MID',          // Days 11-20
-  LATE = 'LATE',        // Days 21-29
-  REVEAL = 'REVEAL',    // Day 30
+  EARLY = 'EARLY',
+  MID = 'MID',
+  LATE = 'LATE',
+  REVEAL = 'REVEAL',
   ENDED = 'ENDED'
 }
 
 export interface Agent {
-  id: string;                    // Unique agent ID (from ERC-8004)
-  name: string;                  // Display name
-  type: 'human' | 'ai';          // Agent type
-  reputation: number;            // Social integrity score (0-100)
-  wins: number;                  // Total wins across games
-  isNPC?: boolean;               // If true, this is an NPC
+  id: string;
+  name: string;
+  type: 'human' | 'ai';
+  reputation: number;
+  wins: number;
+  isNPC?: boolean;
+  following?: string[];  // Agent IDs being followed
+  followers?: string[];  // Agent IDs following this agent
 }
 
 export interface NPC {
@@ -32,36 +34,39 @@ export interface NPC {
   name: string;
   role: 'insider' | 'rumor' | 'celebrity' | 'media' | 'organization';
   bias: 'truthful' | 'deceptive' | 'neutral';
-  bio: string;                   // Satirical description
-  tendsToBeTruthful: boolean;    // For game logic
+  bio: string;
+  tendsToBeTruthful: boolean;
 }
 
 export interface Post {
   id: string;
-  authorId: string;              // Agent or NPC ID
+  authorId: string;
   authorName: string;
-  content: string;               // Max 280 chars
+  content: string;
   timestamp: Date;
-  gameDay: number;               // In-game day (1-30)
+  gameDay: number;
   isSystemMessage?: boolean;
-  reactions?: { [agentId: string]: 'like' | 'dislike' };
-  replyTo?: string;              // ID of post being replied to
+  reactions?: Record<string, 'like' | 'dislike'>;
+  likeCount?: number;
+  dislikeCount?: number;
+  replyTo?: string;
+  mentions?: string[];  // @mentioned agent IDs
 }
 
 export interface DirectMessage {
   id: string;
-  from: string;                  // Agent ID
-  to: string;                    // Agent ID
+  from: string;
+  to: string;
   content: string;
   timestamp: Date;
   gameDay: number;
-  encrypted: boolean;            // If using TEE encryption
+  encrypted: boolean;
 }
 
 export interface GroupChat {
   id: string;
   name: string;
-  members: string[];             // Agent IDs
+  members: string[];
   messages: DirectMessage[];
   createdBy: string;
   createdAt: Date;
@@ -73,14 +78,14 @@ export interface Bet {
   amount: number;
   timestamp: Date;
   gameDay: number;
-  odds: number;                  // Odds at time of bet
+  odds: number;
 }
 
 export interface MarketState {
   yesShares: number;
   noShares: number;
-  yesOdds: number;               // Percentage (0-100)
-  noOdds: number;                // Percentage (0-100)
+  yesOdds: number;
+  noOdds: number;
   totalVolume: number;
   bets: Bet[];
 }
@@ -88,32 +93,44 @@ export interface MarketState {
 export interface GameScenario {
   id: string;
   title: string;
-  question: string;              // The Yes/No question
-  description: string;           // Context for players
-  secretOutcome: Outcome;        // Known only to game system
-  outcomeCommitment: string;     // Hash of outcome for trustless oracle
-  npcs: NPC[];                   // NPCs involved in this scenario
-  timeline: GameEvent[];         // Scheduled events
+  question: string;
+  description: string;
+  secretOutcome: Outcome;
+  outcomeCommitment: string;
+  npcs: NPC[];
+  timeline: GameEvent[];
 }
 
 export interface GameEvent {
-  day: number;                   // Game day (1-30)
-  time?: string;                 // Optional time (HH:MM)
+  day: number;
+  time?: string;
   type: 'news' | 'announcement' | 'leak' | 'scandal' | 'system';
-  author: string;                // NPC ID or 'SYSTEM'
+  author: string;
   content: string;
-  isPublic: boolean;             // If false, sent as DM to select agents
-  targetAgents?: string[];       // If private, which agents receive it
-  triggerCondition?: string;     // Optional: condition to fire this event
+  isPublic: boolean;
+  targetAgents?: string[];
+  triggerCondition?: string;
 }
 
 export interface InsiderClue {
   agentId: string;
   npcId: string;
   content: string;
-  isTruthful: boolean;           // Whether this clue is accurate
+  isTruthful: boolean;
   deliveredAt: Date;
   gameDay: number;
+}
+
+export interface OracleAttestation {
+  data: {
+    sessionId: string;
+    outcome: Outcome;
+    timestamp: number;
+    winners: string[];
+    totalPayout: number;
+  };
+  quote: string;
+  timestamp: number;
 }
 
 export interface GameSession {
@@ -121,39 +138,39 @@ export interface GameSession {
   scenario: GameScenario;
   agents: Agent[];
   phase: GamePhase;
-  currentDay: number;            // 1-30
+  currentDay: number;
   startTime: Date;
   endTime?: Date;
   market: MarketState;
   feed: Post[];
-  directMessages: Map<string, DirectMessage[]>;  // Keyed by "agentId1-agentId2"
+  directMessages: Map<string, DirectMessage[]>;
   groupChats: GroupChat[];
   insiderClues: InsiderClue[];
   bettingOpen: boolean;
   revealed: boolean;
   finalOutcome?: Outcome;
+  oracleAttestation?: OracleAttestation;
 }
 
 export interface ReputationFeedback {
   fromAgentId: string;
   toAgentId: string;
-  helpful: boolean;              // True = positive, false = negative
+  helpful: boolean;
   comment?: string;
 }
 
 export interface GameResult {
   sessionId: string;
   outcome: Outcome;
-  winners: string[];             // Agent IDs
-  payouts: { [agentId: string]: number };
+  winners: string[];
+  payouts: Record<string, number>;
   marketHistory: MarketState[];
-  reputationChanges: { [agentId: string]: number };
+  reputationChanges: Record<string, number>;
 }
 
-// API Request/Response types
 export interface JoinGameRequest {
   agentId: string;
-  signature?: string;            // For verification
+  signature?: string;
 }
 
 export interface PostMessageRequest {
@@ -177,6 +194,5 @@ export interface PlaceBetRequest {
 export interface CreateGroupChatRequest {
   agentId: string;
   name: string;
-  members: string[];             // Agent IDs to invite
+  members: string[];
 }
-

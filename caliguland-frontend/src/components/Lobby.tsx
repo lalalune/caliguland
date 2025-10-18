@@ -41,7 +41,7 @@ export function Lobby() {
             <h3 className="font-bold mb-2">Current Game</h3>
             <p className="text-sm text-gray-300 mb-2">{gameState.question}</p>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Players: {gameState.players.length}</span>
+              <span className="text-gray-400">Players: {gameState.players?.length ?? 0}</span>
               <span className="text-gray-400">Min Required: 5</span>
             </div>
           </div>

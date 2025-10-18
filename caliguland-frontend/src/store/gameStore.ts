@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GameState, Player, Post, MarketState, DirectMessage } from '../types/game';
+import type { GameState, Post, MarketState, DirectMessage } from '../types/game';
 
 interface GameStore {
   gameState: GameState | null;
@@ -23,18 +23,59 @@ export const useGameStore = create<GameStore>((set) => ({
   directMessages: [],
   isConnected: false,
 
-  setGameState: (state) => set({ gameState: state }),
+  setGameState: (state) => set({ 
+    gameState: state ? {
+      ...state,
+      // Deduplicate players by id
+      players: Array.from(
+        new Map((state.players ?? []).map(p => [p.id, p])).values()
+      ),
+      // Deduplicate feed by id
+      feed: Array.from(
+        new Map((state.feed ?? []).map(p => [p.id, p])).values()
+      ),
+      market: state.market ? {
+        ...state.market,
+        // Deduplicate bets by creating composite key
+        bets: Array.from(
+          new Map(
+            (state.market.bets ?? []).map(b => 
+              [`${b.agentId}-${b.timestamp}`, b]
+            )
+          ).values()
+        )
+      } : state.market
+    } : null 
+  }),
   
   setPlayerId: (id) => set({ playerId: id }),
   
   updateMarket: (market) => set((state) => ({
-    gameState: state.gameState ? { ...state.gameState, market } : null
+    gameState: state.gameState ? { 
+      ...state.gameState, 
+      market: market ? {
+        ...market,
+        // Deduplicate bets by composite key
+        bets: Array.from(
+          new Map(
+            (market.bets ?? []).map(b => 
+              [`${b.agentId}-${b.timestamp}`, b]
+            )
+          ).values()
+        )
+      } : market
+    } : null
   })),
   
   addPost: (post) => set((state) => ({
     gameState: state.gameState ? {
       ...state.gameState,
-      feed: [...state.gameState.feed, post]
+      // Deduplicate feed posts by id
+      feed: Array.from(
+        new Map(
+          [...(state.gameState.feed ?? []), post].map(p => [p.id, p])
+        ).values()
+      )
     } : null
   })),
   

@@ -5,6 +5,7 @@
 
 import { Router, Request, Response } from 'express';
 import { GameEngine } from '../game/engine';
+import { GameSession, Bet, Post } from '../types';
 
 export interface MCPTool {
   name: string;
@@ -376,7 +377,7 @@ ${this.generateRecommendation(game, myBets)}
     }
   }
 
-  private generateRecommendation(game: any, myBets: any[]): string {
+  private generateRecommendation(game: GameSession, myBets: Bet[]): string {
     if (!game.bettingOpen) {
       return 'Betting is closed. Wait for outcome reveal.';
     }
@@ -400,7 +401,7 @@ ${this.generateRecommendation(game, myBets)}
     return 'Market is uncertain. Look for insider tips and NPC credibility signals.';
   }
 
-  private analyzeSentiment(feed: any[]): { sentiment: string; confidence: number } {
+  private analyzeSentiment(feed: Post[]): { sentiment: string; confidence: number } {
     let positive = 0, negative = 0;
 
     for (const post of feed.slice(-20)) {

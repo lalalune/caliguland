@@ -1,0 +1,72 @@
+{
+  "name": "@caliguland/monorepo",
+  "version": "0.1.0",
+  "description": "VibeVM Prediction Game - Social prediction markets with TEE oracle, A2A/MCP protocols, and generic ElizaOS agents",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "caliguland-agents",
+    "caliguland-auth",
+    "caliguland-frontend",
+    "caliguland-game",
+    "examples"
+  ],
+  "scripts": {
+    "dev": "concurrently \"bun run dev:game\" \"bun run dev:frontend\"",
+    "dev:game": "bun scripts/start-with-smart-rpc.ts",
+    "dev:game:direct": "cd caliguland-game && bun run dev",
+    "dev:frontend": "cd caliguland-frontend && bun run dev",
+    "dev:auth": "cd caliguland-auth && bun run dev",
+    "dev:agents": "cd caliguland-agents && bun run dev",
+    
+    "start": "docker-compose up -d && echo '✅ All services started at http://localhost:6666'",
+    "stop": "docker-compose down",
+    "restart": "bun run stop && bun run start",
+    
+    "test": "bash scripts/run-all-tests.sh",
+    "test:all": "bash scripts/run-all-tests.sh",
+    "test:e2e": "FAST_TEST=1 bunx playwright test",
+    "test:e2e:ui": "FAST_TEST=1 bunx playwright test --ui",
+    "test:e2e:debug": "FAST_TEST=1 bunx playwright test --debug",
+    "test:contracts": "cd contracts && forge test -vv",
+    "test:game": "cd caliguland-game && bun test",
+    "test:agents": "cd caliguland-agents && bun test",
+    "test:report": "bunx playwright show-report test-results/html",
+    
+    "build": "bun run build:game && bun run build:frontend && bun run build:agents && bun run build:auth",
+    "build:game": "cd caliguland-game && bun run build",
+    "build:frontend": "cd caliguland-frontend && bun run build",
+    "build:agents": "cd caliguland-agents && bun run build",
+    "build:auth": "cd caliguland-auth && bun run build",
+    
+    "deploy:contracts": "cd contracts && forge script script/DeployAll.s.sol --broadcast --rpc-url ${RPC_URL:-http://localhost:8545}",
+    "setup": "bun install && cd contracts && forge install",
+    "clean": "rm -rf node_modules */node_modules */dist contracts/out contracts/cache"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@synthetixio/synpress": "^4.1.1",
+    "@types/bun": "latest",
+    "concurrently": "^9.2.1",
+    "playwright-core": "^1.56.1",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "bun": ">=1.0.0",
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "caliguland",
+    "vibevm",
+    "prediction-market",
+    "erc-8004",
+    "tee",
+    "a2a",
+    "mcp",
+    "elizaos",
+    "agents"
+  ],
+  "author": "Phala Network",
+  "license": "Apache-2.0"
+}

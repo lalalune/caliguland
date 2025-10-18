@@ -1,84 +1,87 @@
 /**
  * Dstack TEE Integration Utilities
+ * PRODUCTION: Requires real @phala/dstack-sdk package
+ * TESTING: Can use mock implementation via dependency injection
  */
 
-// Type stub for DStack SDK - update when SDK types are available
-type DstackSDKType = any;
-let DstackSDK: any;
-try {
-  const dstackModule = require('@phala/dstack-sdk');
-  DstackSDK = dstackModule.DstackSDK || dstackModule.default || dstackModule;
-} catch {
-  // Fallback for development without TEE
-  DstackSDK = class {
-    async deriveKey() { return { key: 'mock-key' }; }
-    async getInfo() { return { version: 'mock' }; }
-    async getQuote() { return { quote: 'mock-quote' }; }
-  };
+import { createHash } from 'crypto';
+
+// DstackSDK interface - matches @phala/dstack-sdk API
+interface IDstackSDK {
+  deriveKey(path: string): Promise<{ key: string }>;
+  getInfo(): Promise<{ version: string; [key: string]: unknown }>;
+  getQuote(reportData: string): Promise<{ quote: string; [key: string]: unknown }>;
+}
+
+interface DstackKeyResponse {
+  key: string;
+}
+
+interface DstackInfoResponse {
+  version: string;
+  [key: string]: unknown;
+}
+
+interface DstackQuoteResponse {
+  quote: string;
+  [key: string]: unknown;
+}
+
+// Load real Dstack SDK - NO MOCKS
+function loadDstackSDK(): IDstackSDK {
+  const sdk = require('@phala/dstack-sdk');
+  const DstackSDKClass = sdk.DstackSDK || sdk.default || sdk;
+  if (!DstackSDKClass) {
+    throw new Error('@phala/dstack-sdk not properly installed');
+  }
+  return new DstackSDKClass();
 }
 
 export class DstackHelper {
-  private sdk: any;
+  private sdk: IDstackSDK;
   private keyCache: Map<string, string>;
 
-  constructor() {
-    this.sdk = new DstackSDK();
+  constructor(sdk?: IDstackSDK) {
+    this.sdk = sdk || loadDstackSDK();
     this.keyCache = new Map();
   }
 
   /**
    * Derive a deterministic key from a path
+   * @throws If derivation fails
    */
   async deriveKey(path: string): Promise<string> {
-    if (this.keyCache.has(path)) {
-      return this.keyCache.get(path)!;
+    const cached = this.keyCache.get(path);
+    if (cached) {
+      return cached;
     }
 
-    try {
-      const response = await this.sdk.deriveKey(path);
-      this.keyCache.set(path, response.key);
-      return response.key;
-    } catch (error) {
-      console.error(`Failed to derive key for path: ${path}`, error);
-      throw error;
-    }
+    const response = await this.sdk.deriveKey(path);
+    this.keyCache.set(path, response.key);
+    return response.key;
   }
 
   /**
    * Get TEE instance information
+   * @throws If TEE info cannot be retrieved
    */
-  async getInfo() {
-    try {
-      return await this.sdk.getInfo();
-    } catch (error) {
-      console.error('Failed to get TEE info:', error);
-      throw error;
-    }
+  async getInfo(): Promise<DstackInfoResponse> {
+    return await this.sdk.getInfo();
   }
 
   /**
    * Generate a quote for attestation
+   * @throws If quote generation fails
    */
-  async getQuote(reportData: string | object) {
-    try {
-      const data = typeof reportData === 'string' 
-        ? reportData 
-        : JSON.stringify(reportData);
-      
-      return await this.sdk.getQuote(data);
-    } catch (error) {
-      console.error('Failed to generate quote:', error);
-      throw error;
-    }
+  async getQuote(reportData: string): Promise<DstackQuoteResponse> {
+    return await this.sdk.getQuote(reportData);
   }
 
   /**
    * Create a commitment hash for an outcome
    */
   createCommitment(outcome: string, salt: string): string {
-    const crypto = require('crypto');
-    return crypto
-      .createHash('sha256')
+    return createHash('sha256')
       .update(`${outcome}${salt}`)
       .digest('hex');
   }
@@ -92,5 +95,29 @@ export class DstackHelper {
   }
 }
 
-export const dstackHelper = new DstackHelper();
+// Singleton instance
+let _dstackHelperInstance: DstackHelper | null = null;
 
+export const dstackHelper = {
+  get instance(): DstackHelper {
+    if (!_dstackHelperInstance) {
+      _dstackHelperInstance = new DstackHelper();
+    }
+    return _dstackHelperInstance;
+  },
+
+  deriveKey: (path: string): Promise<string> =>
+    dstackHelper.instance.deriveKey(path),
+
+  getInfo: (): Promise<DstackInfoResponse> =>
+    dstackHelper.instance.getInfo(),
+
+  getQuote: (reportData: string): Promise<DstackQuoteResponse> =>
+    dstackHelper.instance.getQuote(reportData),
+
+  createCommitment: (outcome: string, salt: string): string =>
+    dstackHelper.instance.createCommitment(outcome, salt),
+
+  verifyCommitment: (outcome: string, salt: string, commitment: string): boolean =>
+    dstackHelper.instance.verifyCommitment(outcome, salt, commitment),
+};

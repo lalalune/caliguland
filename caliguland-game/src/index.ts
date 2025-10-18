@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createServer } from 'http';
-import { GameEngine } from './game/engine';
+import { GameEngine, BroadcastMessage } from './game/engine';
 import { apiRouter } from './api/routes';
 import { A2AServer } from './a2a/server';
 import { MCPServer } from './mcp/server';
@@ -78,7 +78,7 @@ wss.on('connection', (ws: WebSocket, req) => {
   }
 });
 
-function handleWebSocketMessage(agentId: string, message: any, ws: WebSocket) {
+function handleWebSocketMessage(agentId: string, message: BroadcastMessage, ws: WebSocket) {
   // Handle real-time game actions via WebSocket
   switch (message.type) {
     case 'ping':
@@ -96,7 +96,7 @@ function handleWebSocketMessage(agentId: string, message: any, ws: WebSocket) {
 }
 
 // Broadcast to all connected clients
-export function broadcast(message: any) {
+export function broadcast(message: BroadcastMessage) {
   const data = JSON.stringify(message);
   clients.forEach((ws) => {
     if (ws.readyState === WebSocket.OPEN) {
@@ -106,7 +106,7 @@ export function broadcast(message: any) {
 }
 
 // Send to specific agent
-export function sendToAgent(agentId: string, message: any) {
+export function sendToAgent(agentId: string, message: BroadcastMessage) {
   const ws = clients.get(agentId);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(message));

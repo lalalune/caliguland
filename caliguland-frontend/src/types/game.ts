@@ -22,6 +22,8 @@ export interface Player {
   isNPC?: boolean;
 }
 
+export type Agent = Player;
+
 export interface Post {
   id: string;
   authorId: string;
@@ -98,4 +100,3 @@ export interface SendDMRequest {
   to: string;
   content: string;
 }
-

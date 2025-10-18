@@ -1,0 +1,11 @@
+{
+  "name": "@caliguland/shared",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./types.ts",
+  "types": "./types.ts",
+  "exports": {
+    ".": "./types.ts"
+  }
+}
+

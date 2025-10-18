@@ -7,10 +7,14 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
+    "dev:blockchain": "ENABLE_BLOCKCHAIN=true ts-node src/index.ts",
+    "dev:fast": "TEST_MODE=true GAME_DURATION=300 ts-node src/index.ts",
     "watch": "nodemon --exec ts-node src/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:e2e": "ENABLE_BLOCKCHAIN=true jest src/__tests__/e2e --runInBand",
+    "test:e2e:fast": "TEST_MODE=true ENABLE_BLOCKCHAIN=true jest src/__tests__/e2e --runInBand"
   },
   "keywords": [
     "caliguland",

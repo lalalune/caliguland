@@ -48,13 +48,14 @@ export class Web3Service extends Service {
       join(__dirname, '../../contracts')                // Fallback
     ];
 
-    let addresses: any = null;
-    let abi: any = null;
+    let addresses: { abi?: unknown; address?: string } | null = null;
+    let abi: unknown = null;
 
     for (const basePath of possiblePaths) {
       try {
         const addressPath = join(basePath, 'IdentityRegistry.json');
-        addresses = JSON.parse(readFileSync(addressPath, 'utf-8'));
+        const fileContent = readFileSync(addressPath, 'utf-8');
+        addresses = JSON.parse(fileContent) as { abi?: unknown; address?: string };
         abi = addresses.abi;
         break;
       } catch {
@@ -63,15 +64,7 @@ export class Web3Service extends Service {
     }
 
     if (!addresses || !abi) {
-      logger.warn('[Web3] ERC-8004 contracts not found - using mock registration');
-      this.agentInfo = {
-        agentId: BigInt(Math.floor(Math.random() * 1000)),
-        agentAddress: this.wallet.address,
-        agentDomain: this.generateDomain(runtime),
-        isRegistered: true
-      };
-      logger.info('[Web3] ✅ Mock registration (for testing without contracts)');
-      return;
+      throw new Error('ERC-8004 IdentityRegistry contracts not found. Deploy contracts first: cd contracts && forge script script/DeployAll.s.sol');
     }
 
     this.identityContract = new Contract(

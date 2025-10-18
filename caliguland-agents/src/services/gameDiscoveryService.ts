@@ -96,13 +96,48 @@ export class GameDiscoveryService extends Service {
     try {
       logger.info(`[Discovery] Querying registry ${registryAddress} for ${type} servers...`);
 
-      // TODO: Implement registry query
-      // 1. Connect to IdentityRegistry contract
-      // 2. Query for agents with metadata.type === 'game-server' or 'betting-server'
-      // 3. Fetch Agent Cards from discovered servers
-      // 4. Return the first valid one
+      const rpcUrl = runtime.getSetting('RPC_URL') || 'http://localhost:8545';
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
 
-      logger.warn('[Discovery] Registry discovery not yet implemented');
+      // ERC-8004 IdentityRegistry ABI (minimal interface)
+      const registryABI = [
+        'function getAgentCount() external view returns (uint256)',
+        'function getAgentByIndex(uint256 index) external view returns (address)',
+        'function getAgentMetadata(address agent) external view returns (string memory)'
+      ];
+
+      const registry = new ethers.Contract(registryAddress, registryABI, provider);
+
+      // Get total agent count
+      const agentCount = await registry.getAgentCount();
+      logger.info(`[Discovery] Found ${agentCount} registered agents`);
+
+      // Query each agent's metadata
+      for (let i = 0; i < agentCount; i++) {
+        try {
+          const agentAddress = await registry.getAgentByIndex(i);
+          const metadataJson = await registry.getAgentMetadata(agentAddress);
+          
+          if (!metadataJson) continue;
+
+          const metadata = JSON.parse(metadataJson);
+          
+          // Check if this is the server type we're looking for
+          const serverType = type === 'game' ? 'game-server' : 'betting-server';
+          if (metadata.type === serverType && metadata.url) {
+            // Try to connect to this server
+            const serverInfo = await this.connectDirect(metadata.url, type);
+            logger.info(`[Discovery] Found ${type} server via registry: ${serverInfo.name}`);
+            return { ...serverInfo, discoveryMethod: 'registry' };
+          }
+        } catch (error) {
+          // Skip invalid agents
+          logger.debug(`[Discovery] Skipping agent at index ${i}:`, error);
+          continue;
+        }
+      }
+
+      logger.info(`[Discovery] No ${type} servers found in registry`);
       return null;
     } catch (error) {
       logger.error('[Discovery] Registry query failed:', error);

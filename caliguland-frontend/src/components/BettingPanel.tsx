@@ -48,22 +48,22 @@ export function BettingPanel() {
 
   return (
     <div className="card">
-      <h3 className="text-xl font-bold mb-4">Place Your Bet</h3>
+      <h3 className="text-lg font-bold mb-4">Place Your Bet</h3>
 
       {!gameState?.bettingOpen && (
-        <div className="p-3 bg-yellow-500/20 border border-yellow-500 rounded-lg text-yellow-400 text-sm mb-4">
+        <div className="p-2 bg-yellow-500/20 border border-yellow-500 rounded-lg text-yellow-400 text-xs mb-4">
           Betting is currently closed
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Outcome Selection */}
         <div>
-          <label className="block text-sm font-medium mb-2">Outcome</label>
+          <label className="block text-xs font-medium mb-2">Outcome</label>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setSelectedOutcome(Outcome.YES)}
-              className={`p-3 rounded-lg font-medium transition-colors ${
+              className={`p-2 rounded-lg text-sm font-medium transition-colors ${
                 selectedOutcome === Outcome.YES
                   ? 'bg-green-500 text-white'
                   : 'bg-gray-700 hover:bg-gray-600'
@@ -74,7 +74,7 @@ export function BettingPanel() {
             </button>
             <button
               onClick={() => setSelectedOutcome(Outcome.NO)}
-              className={`p-3 rounded-lg font-medium transition-colors ${
+              className={`p-2 rounded-lg text-sm font-medium transition-colors ${
                 selectedOutcome === Outcome.NO
                   ? 'bg-red-500 text-white'
                   : 'bg-gray-700 hover:bg-gray-600'
@@ -88,7 +88,7 @@ export function BettingPanel() {
 
         {/* Amount Selection */}
         <div>
-          <label className="block text-sm font-medium mb-2">
+          <label className="block text-xs font-medium mb-2">
             Amount: {amount}
           </label>
           <input
@@ -108,12 +108,12 @@ export function BettingPanel() {
         </div>
 
         {/* Quick Amount Buttons */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-1">
           {[100, 250, 500, 1000].map((value) => (
             <button
               key={value}
               onClick={() => setAmount(value)}
-              className="p-2 bg-gray-700 rounded-lg text-sm hover:bg-gray-600"
+              className="p-1.5 bg-gray-700 rounded text-xs hover:bg-gray-600"
             >
               {value}
             </button>
@@ -121,13 +121,13 @@ export function BettingPanel() {
         </div>
 
         {error && (
-          <div className="p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-400 text-sm">
+          <div className="p-2 bg-red-500/20 border border-red-500 rounded text-red-400 text-xs">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="p-3 bg-green-500/20 border border-green-500 rounded-lg text-green-400 text-sm">
+          <div className="p-2 bg-green-500/20 border border-green-500 rounded text-green-400 text-xs">
             {success}
           </div>
         )}
@@ -135,7 +135,7 @@ export function BettingPanel() {
         <button
           onClick={handleBet}
           disabled={isBetting || !gameState?.bettingOpen || !playerId}
-          className="btn btn-primary w-full"
+          className="btn btn-primary w-full text-sm py-2"
           data-cy="place-bet-button"
         >
           {isBetting ? 'Placing Bet...' : `Bet ${amount} on ${selectedOutcome}`}
@@ -143,14 +143,14 @@ export function BettingPanel() {
       </div>
 
       {/* Your Bets */}
-      {gameState?.market.bets.filter(b => b.agentId === playerId).length > 0 && (
-        <div className="mt-6 pt-6 border-t border-gray-700">
-          <h4 className="font-medium mb-3">Your Bets</h4>
-          <div className="space-y-2">
-            {gameState.market.bets
+      {(gameState?.market?.bets || []).filter(b => b.agentId === playerId).length > 0 && (
+        <div className="mt-4 pt-4 border-t border-gray-700">
+          <h4 className="text-sm font-medium mb-2">Your Bets</h4>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {(gameState?.market?.bets || [])
               .filter(b => b.agentId === playerId)
               .map((bet, index) => (
-                <div key={index} className="p-2 bg-gray-700 rounded text-sm">
+                <div key={index} className="p-2 bg-gray-700 rounded text-xs">
                   <div className="flex justify-between">
                     <span className={bet.outcome === Outcome.YES ? 'text-green-400' : 'text-red-400'}>
                       {bet.outcome}

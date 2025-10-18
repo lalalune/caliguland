@@ -44,7 +44,7 @@ npm start
 # Build and run all services
 docker-compose up --build
 
-# Access at http://localhost:8080
+# Access at http://localhost:6666
 ```
 
 ## API Usage

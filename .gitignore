@@ -3,3 +3,6 @@
 .claude/settings.local.json
 .claude
 .phala
+node_modules
+**/node_modules
+**/dist
