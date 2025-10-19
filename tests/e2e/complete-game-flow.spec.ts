@@ -178,7 +178,7 @@ test.describe('Caliguland - Complete Game Flow E2E', () => {
   });
 
   test('Step 6: Players place bets', async () => {
-    console.log('\n💰 Testing betting...');
+    console.log('\n💰 Testing predictions...');
     
     const betAmounts = [100, 250, 150];
     
@@ -189,18 +189,18 @@ test.describe('Caliguland - Complete Game Flow E2E', () => {
       const outcome = i % 2 === 0 ? 'yes' : 'no';
       
       // Select outcome
-      const outcomeButton = page.locator(`[data-cy="bet-${outcome}-button"]`);
+      const outcomeButton = page.locator(`[data-cy="prediction-${outcome}-button"]`);
       if (await outcomeButton.count() > 0) {
         await outcomeButton.click();
         
         // Set amount
-        const amountSlider = page.locator('[data-cy="bet-amount-slider"]');
+        const amountSlider = page.locator('[data-cy="prediction-amount-slider"]');
         if (await amountSlider.count() > 0) {
           await amountSlider.fill(String(betAmount));
         }
         
         // Place bet
-        const placeBetButton = page.locator('[data-cy="place-bet-button"]');
+        const placeBetButton = page.locator('[data-cy="make-prediction-button"]');
         await placeBetButton.click();
         
         console.log(`   ✅ ${playerName} bet ${betAmount} on ${outcome.toUpperCase()}`);

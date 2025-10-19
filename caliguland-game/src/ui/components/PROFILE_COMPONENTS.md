@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the profile components created for Phase 4 of the Caliguland prediction game. These components provide comprehensive player and NPC profile views with stats, betting history, and social connections.
+This document describes the profile components created for Phase 4 of the Caliguland prediction game. These components provide comprehensive player and NPC profile views with stats, prediction history, and social connections.
 
 ## Components
 
@@ -54,7 +54,7 @@ import { ProfileHeader } from './components';
 - Uses ProfileHeader component
 - **5 Tabs**:
   - **Posts**: Feed of player's posts with timestamps
-  - **Bets**: Complete betting history with BettingHistory component
+  - **Bets**: Complete prediction history with PredictionHistory component
   - **Stats**: Performance metrics with StatsCard components
     - Win rate, profit/loss, ROI
     - Total games, average bet, total wagered
@@ -90,7 +90,7 @@ import { PlayerProfile } from './components';
 **Props**:
 - `player`: ProfileHeaderAgent - Player data
 - `posts`: Post[] - Player's posts
-- `bets`: BettingHistoryEntry[] - Betting history
+- `bets`: PredictionHistoryEntry[] - Prediction history
 - `stats`: PlayerStats - Performance statistics
 - `followers`: FollowListAgent[] - Followers list
 - `following`: FollowListAgent[] - Following list
@@ -199,11 +199,11 @@ import { StatsCard } from './components';
 
 ---
 
-### 5. BettingHistory
+### 5. PredictionHistory
 
-**Location**: `/Users/shawwalters/jeju/apps/caliguland/caliguland-game/src/ui/components/BettingHistory.tsx`
+**Location**: `/Users/shawwalters/jeju/apps/caliguland/caliguland-game/src/ui/components/PredictionHistory.tsx`
 
-**Purpose**: Display and analyze betting history with filtering, sorting, and pagination.
+**Purpose**: Display and analyze prediction history with filtering, sorting, and pagination.
 
 **Features**:
 - **Summary Stats Section**:
@@ -230,9 +230,9 @@ import { StatsCard } from './components';
 
 **Usage**:
 ```tsx
-import { BettingHistory } from './components';
+import { PredictionHistory } from './components';
 
-<BettingHistory
+<PredictionHistory
   bets={playerBets}
   onBetClick={(bet) => viewBetDetails(bet)}
   showPagination={true}
@@ -241,15 +241,15 @@ import { BettingHistory } from './components';
 ```
 
 **Props**:
-- `bets`: BettingHistoryEntry[] - Array of bets
+- `bets`: PredictionHistoryEntry[] - Array of bets
 - `onBetClick`: (bet) => void - Callback when bet clicked
 - `showPagination`: boolean - Show pagination controls
 - `itemsPerPage`: number - Items per page
 - `className`: string - Custom CSS classes
 
-**BettingHistoryEntry Interface**:
+**PredictionHistoryEntry Interface**:
 ```typescript
-interface BettingHistoryEntry extends Bet {
+interface PredictionHistoryEntry extends Bet {
   id: string;
   gameId: string;
   gameTitle: string;
@@ -324,7 +324,7 @@ interface FollowListAgent extends Agent {
 ```
 PlayerProfile
 ├── ProfileHeader (displays header)
-├── BettingHistory (Bets tab)
+├── PredictionHistory (Bets tab)
 ├── StatsCard (Stats tab - multiple instances)
 └── FollowList (Followers/Following tabs)
 
@@ -335,7 +335,7 @@ NPCProfile
 FollowList
 └── Agent cards (each with Follow button)
 
-BettingHistory
+PredictionHistory
 └── Stats cards (summary section)
 ```
 
@@ -385,7 +385,7 @@ All components support dark mode with:
 ### API Integration
 All components have TODO comments marking API integration points:
 - Fetch player data
-- Fetch betting history
+- Fetch prediction history
 - Fetch followers/following
 - Real-time updates
 
@@ -513,7 +513,7 @@ export const StatsDashboard = ({ stats }) => {
 ├── PlayerProfile.tsx (15KB)
 ├── NPCProfile.tsx (16KB)
 ├── StatsCard.tsx (5.8KB)
-├── BettingHistory.tsx (14KB)
+├── PredictionHistory.tsx (14KB)
 ├── FollowList.tsx (12KB)
 ├── index.ts (exports)
 └── PROFILE_COMPONENTS.md (this file)
@@ -530,7 +530,7 @@ import {
   PlayerProfile,
   NPCProfile,
   StatsCard,
-  BettingHistory,
+  PredictionHistory,
   FollowList,
 
   // Types
@@ -541,8 +541,8 @@ import {
   NPCProfileProps,
   NPCProfileData,
   StatsCardProps,
-  BettingHistoryProps,
-  BettingHistoryEntry,
+  PredictionHistoryProps,
+  PredictionHistoryEntry,
   FollowListProps,
   FollowListAgent,
 } from '@/ui/components';

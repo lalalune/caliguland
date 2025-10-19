@@ -83,7 +83,7 @@ export interface JoinGameRequest {
   signature?: string;
 }
 
-export interface PlaceBetRequest {
+export interface MakePredictionRequest {
   agentId: string;
   outcome: Outcome.YES | Outcome.NO;
   amount: number;

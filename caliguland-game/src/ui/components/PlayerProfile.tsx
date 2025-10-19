@@ -2,7 +2,7 @@
  * PlayerProfile Component
  *
  * Complete player profile view with tabs for posts, bets, stats, and social connections.
- * Displays comprehensive player information including betting history, performance stats,
+ * Displays comprehensive player information including prediction history, performance stats,
  * and social feed.
  *
  * @component
@@ -18,7 +18,7 @@
 
 import React, { useState } from 'react';
 import { ProfileHeader, ProfileHeaderAgent } from './ProfileHeader';
-import { BettingHistory, BettingHistoryEntry } from './BettingHistory';
+import { PredictionHistory, PredictionHistoryEntry } from './PredictionHistory';
 import { FollowList, FollowListAgent } from './FollowList';
 import { StatsCard } from './StatsCard';
 import { Post } from '../../types';
@@ -47,7 +47,7 @@ export interface PlayerStats {
     profit: number;
   };
 
-  /** Average bet size */
+  /** Average prediction size */
   averageBetSize: number;
 
   /** Win streak */
@@ -73,8 +73,8 @@ export interface PlayerProfileProps {
   /** Posts made by the player */
   posts?: Post[];
 
-  /** Betting history */
-  bets?: BettingHistoryEntry[];
+  /** Prediction history */
+  bets?: PredictionHistoryEntry[];
 
   /** Player statistics */
   stats?: PlayerStats;
@@ -97,8 +97,8 @@ export interface PlayerProfileProps {
   /** Callback when edit profile is clicked */
   onEditProfile?: () => void;
 
-  /** Callback when a bet is clicked */
-  onBetClick?: (bet: BettingHistoryEntry) => void;
+  /** Callback when a prediction is clicked */
+  onBetClick?: (bet: PredictionHistoryEntry) => void;
 
   /** Callback when an agent is clicked */
   onAgentClick?: (agent: FollowListAgent) => void;
@@ -166,8 +166,8 @@ export const PlayerProfile: React.FC<PlayerProfileProps> = ({
       ? bets.reduce((best, bet) => ((bet.profitLoss || 0) > best.profit ? { gameTitle: bet.gameTitle, profit: bet.profitLoss || 0 } : best), { gameTitle: '', profit: 0 })
       : { gameTitle: 'N/A', profit: 0 },
     averageBetSize: bets.length > 0 ? bets.reduce((sum, bet) => sum + bet.amount, 0) / bets.length : 0,
-    currentWinStreak: 0, // TODO: Calculate from bet history
-    bestWinStreak: 0, // TODO: Calculate from bet history
+    currentWinStreak: 0, // TODO: Calculate from prediction history
+    bestWinStreak: 0, // TODO: Calculate from prediction history
     totalWagered: bets.reduce((sum, bet) => sum + bet.amount, 0),
     roi: 0, // Calculated below
   };
@@ -281,9 +281,9 @@ export const PlayerProfile: React.FC<PlayerProfileProps> = ({
           {activeTab === 'bets' && (
             <div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                Betting History
+                Prediction History
               </h3>
-              <BettingHistory
+              <PredictionHistory
                 bets={bets}
                 onBetClick={onBetClick}
                 showPagination={true}

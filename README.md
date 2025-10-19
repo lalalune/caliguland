@@ -31,8 +31,9 @@ Caliguland **automatically prefers Jeju L2** over Anvil:
 - 📊 Logs which chain it's using
 - 🎯 Zero configuration needed
 - ✅ **VERIFIED**: Tested and working with both Jeju and Anvil
+- 🔗 **ERC-8004 Auto-Registration**: Registers to agent registry on startup
 
-**How it works**: Checks port 8545 → Detects chain ID → Uses Jeju (1337/901/902) or Anvil (31337)
+**How it works**: Checks port 8545 → Detects chain ID → Uses Jeju (1337/901/902) or Anvil (31337) → Registers game to ERC-8004 registry
 
 ### Simple Commands
 
@@ -381,7 +382,7 @@ MAX_PLAYERS=20
 
 # Network
 GAME_SERVER_URL=http://localhost:8000
-BETTING_SERVER_URL=http://localhost:9000  # Separate!
+PREDICTION_SERVER_URL=http://localhost:9000  # Separate!
 RPC_URL=http://localhost:8545
 REGISTRY_ADDRESS=0x...  # ERC-8004 registry
 

@@ -49,7 +49,7 @@ Plays game using discovered skills
 │  │  ├─ Discover skills                │
 │  │  └─ Register actions dynamically  │
 │  │                                   │
-│  ├─ BettingService                   │
+│  ├─ PredictionService                   │
 │  │  ├─ Separate A2A client           │
 │  │  └─ Different server/contract     │
 │  │                                   │
@@ -67,21 +67,47 @@ Plays game using discovered skills
 
 ## 🚀 Quick Start
 
+### Localnet Setup (Recommended)
+
 ```bash
-# Install
+# 1. Install dependencies
 bun install
 
-# Configure
-export GAME_SERVER_URL=http://localhost:8000
-export BETTING_SERVER_URL=http://localhost:9000  # DIFFERENT server!
-export RPC_URL=http://localhost:8545
+# 2. Load pre-funded Anvil wallets
+source setup-localnet.sh
 
-export PLAYER1_PRIVATE_KEY=0x...
-export PLAYER2_PRIVATE_KEY=0x...
+# 3. Deploy contracts (from repo root)
+cd ../../../contracts
+forge script script/DeployAll.s.sol --broadcast --rpc-url http://localhost:8545
+# Save the IdentityRegistry address from output
 
-# Start agents
-bun run start
+# 4. Set registry address
+export REGISTRY_ADDRESS=0x...  # Use address from step 3
+
+# 5. Fund agents with elizaOS tokens
+cd ../apps/caliguland/caliguland-agents
+bun run test:fund
+
+# 6. Test agents
+bun run test:registration  # Verify wallets and balances
+bun run test:startup       # Verify agent initialization
+
+# 7. Start agents (all 5 agents)
+bun run dev
 ```
+
+**Pre-funded Wallets**: The setup script uses Anvil's default accounts which are pre-funded with 10,000 ETH each. See `localnet-wallets.json` for details.
+
+### What You'll See
+
+Agents will:
+- ✅ Create wallets from pre-funded Anvil accounts
+- ✅ Check ETH and elizaOS token balances
+- ✅ Register to ERC-8004 IdentityRegistry
+- ✅ Discover game server and load skills dynamically
+- ✅ Attempt LLM calls (will fail without API keys - **this is expected!**)
+
+**Note**: Agents need LLM API keys for full functionality. Without keys, they will fail when trying to make decisions, which proves they're trying to use LLMs correctly!
 
 ## 📝 How It Works
 
@@ -139,7 +165,7 @@ await a2aClient.sendMessage(nextAction.skillId, nextAction.params);
 ### 6. Betting (Separate!)
 
 ```typescript
-// BettingService connects to DIFFERENT A2A server
+// PredictionService connects to DIFFERENT A2A server
 const bettingCard = await fetch(`${bettingServer}/.well-known/agent-card.json`);
 const betSkill = bettingCard.skills.find(s => s.id.includes('bet'));
 
@@ -240,7 +266,7 @@ Just point `GAME_SERVER_URL` to any A2A server and the agent will:
 - Registers actions in runtime
 - **100% generic** - adapts to any game!
 
-### BettingService
+### PredictionService
 - Connects to SEPARATE betting server
 - Different A2A endpoint
 - Different contract
@@ -264,7 +290,7 @@ GAME_SERVER_URL=http://localhost:8000        # Direct
 REGISTRY_ADDRESS=0x...                        # Via registry
 
 # Optional: Betting (SEPARATE from game!)
-BETTING_SERVER_URL=http://localhost:9000
+PREDICTION_SERVER_URL=http://localhost:9000
 
 # Optional: Auto-play
 AGENT_AUTOPLAY=1

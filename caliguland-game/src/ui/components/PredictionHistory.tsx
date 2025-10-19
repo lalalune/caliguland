@@ -1,13 +1,13 @@
 /**
- * BettingHistory Component
+ * PredictionHistory Component
  *
- * Displays a table of past betting history with filtering, sorting, and pagination.
- * Shows bet details including date, game, outcome, amount, and profit/loss.
+ * Displays a table of past prediction history with filtering, sorting, and pagination.
+ * Shows prediction details including date, game, outcome, amount, and profit/loss.
  *
  * @component
  * @example
  * ```tsx
- * <BettingHistory
+ * <PredictionHistory
  *   bets={playerBets}
  *   onBetClick={(bet) => console.log('Bet clicked:', bet)}
  * />
@@ -18,10 +18,10 @@ import React, { useState, useMemo } from 'react';
 import { Bet, Outcome } from '../../types';
 
 /**
- * Extended bet interface with game information
+ * Extended prediction interface with game information
  */
-export interface BettingHistoryEntry extends Bet {
-  /** Unique bet ID */
+export interface PredictionHistoryEntry extends Bet {
+  /** Unique prediction ID */
   id: string;
 
   /** Game/session ID */
@@ -33,7 +33,7 @@ export interface BettingHistoryEntry extends Bet {
   /** Final game outcome */
   finalOutcome?: Outcome;
 
-  /** Profit or loss from this bet */
+  /** Profit or loss from this prediction */
   profitLoss?: number;
 
   /** Bet status */
@@ -41,14 +41,14 @@ export interface BettingHistoryEntry extends Bet {
 }
 
 /**
- * Props for the BettingHistory component
+ * Props for the PredictionHistory component
  */
-export interface BettingHistoryProps {
-  /** Array of betting history entries */
-  bets: BettingHistoryEntry[];
+export interface PredictionHistoryProps {
+  /** Array of prediction history entries */
+  bets: PredictionHistoryEntry[];
 
-  /** Callback when a bet is clicked */
-  onBetClick?: (bet: BettingHistoryEntry) => void;
+  /** Callback when a prediction is clicked */
+  onBetClick?: (bet: PredictionHistoryEntry) => void;
 
   /** Show pagination controls */
   showPagination?: boolean;
@@ -107,11 +107,11 @@ const formatDate = (timestamp: Date | string): string => {
 };
 
 /**
- * BettingHistory Component
+ * PredictionHistory Component
  *
- * Displays a comprehensive betting history with filtering and sorting capabilities.
+ * Displays a comprehensive prediction history with filtering and sorting capabilities.
  */
-export const BettingHistory: React.FC<BettingHistoryProps> = ({
+export const PredictionHistory: React.FC<PredictionHistoryProps> = ({
   bets,
   onBetClick,
   showPagination = true,
@@ -200,7 +200,7 @@ export const BettingHistory: React.FC<BettingHistoryProps> = ({
       <div className={`text-center py-12 ${className}`}>
         <div className="text-6xl mb-4">📊</div>
         <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          No Betting History
+          No Prediction History
         </h3>
         <p className="text-gray-500 dark:text-gray-400">
           Your bets will appear here once you start playing.
@@ -400,4 +400,4 @@ export const BettingHistory: React.FC<BettingHistoryProps> = ({
   );
 };
 
-export default BettingHistory;
+export default PredictionHistory;

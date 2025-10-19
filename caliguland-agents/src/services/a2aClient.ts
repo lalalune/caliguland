@@ -8,7 +8,7 @@
  * - Handles message signing and streaming
  * 
  * Can be instantiated multiple times for different servers
- * (e.g., one for game, one for betting)
+ * (e.g., one for game, one for prediction)
  */
 
 import { Service, type IAgentRuntime, logger, type Action, type ActionResult, type Memory, type HandlerCallback, type Content } from '@elizaos/core';
@@ -174,50 +174,37 @@ export class A2AClientService extends Service {
           _options?: Record<string, unknown>,
           callback?: HandlerCallback
         ): Promise<ActionResult> => {
-          try {
-            const params: Record<string, unknown> = {};
-            const textContent = message.content.text || '';
-            
-            // Execute skill via A2A
-            const result = await this.sendMessage(skill.id, params, textContent);
-            
-            // Extract response text
-            const responseText = this.extractTextFromA2AResponse(result);
-            
-            const responseContent: Content = {
-              text: responseText,
-              action: skill.id,
-              source: message.content.source
-            };
+          const params: Record<string, unknown> = {};
+          const textContent = message.content.text || '';
+          
+          // Execute skill via A2A
+          const result = await this.sendMessage(skill.id, params, textContent);
+          
+          // Extract response text
+          const responseText = this.extractTextFromA2AResponse(result);
+          
+          const responseContent: Content = {
+            text: responseText,
+            action: skill.id,
+            source: message.content.source
+          };
 
-            if (callback) {
-              await callback(responseContent);
-            }
-
-            return {
-              success: true,
-              text: responseText,
-              data: result
-            };
-          } catch (error) {
-            logger.error(`[A2A] Skill ${skill.id} failed:`, error);
-            return {
-              success: false,
-              text: `Failed to execute ${skill.name}`,
-              error: error instanceof Error ? error : new Error(String(error))
-            };
+          if (callback) {
+            await callback(responseContent);
           }
+
+          return {
+            success: true,
+            text: responseText,
+            data: result
+          };
         },
         
         examples: []
       };
 
-      try {
-        (runtime.actions as unknown as Action[]).push(action);
-        logger.info(`[A2A] ✓ Registered dynamic action: ${actionName} (${skill.name})`);
-      } catch (err) {
-        logger.warn(`[A2A] Failed to register action ${actionName}:`, err);
-      }
+      (runtime.actions as unknown as Action[]).push(action);
+      logger.info(`[A2A] ✓ Registered dynamic action: ${actionName} (${skill.name})`);
     }
 
     logger.info(`[A2A] ✅ Registered ${this.agentCard.skills.length} dynamic actions from Agent Card`);

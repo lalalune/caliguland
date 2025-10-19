@@ -163,7 +163,7 @@ describe('FULL GAME INTEGRATION TEST - NO MOCKS', () => {
       'test-game',
       agents,
       [agents[0].id], // Winner
-      [agents[0].id, agents[1].id], // Correct bettors
+      [agents[0].id, agents[1].id], // Correct predictors
       [agents[2].id] // Betrayer
     );
 
@@ -213,7 +213,7 @@ describe('FULL GAME INTEGRATION TEST - NO MOCKS', () => {
     expect(belief.yesBelief).toBeGreaterThan(0.5); // Should lean YES
     expect(belief.yesBelief + belief.noBelief).toBeCloseTo(1, 5);
 
-    // Make betting decision
+    // Make prediction decision
     const decision = strategy.makeBettingDecision({
       yesOdds: 40,
       noOdds: 60,
@@ -302,7 +302,7 @@ describe('FULL GAME INTEGRATION TEST - NO MOCKS', () => {
     console.log(`    ✅ Direct messages work`);
 
     // Place bets using LMSR
-    console.log('\n  Testing LMSR betting...');
+    console.log('\n  Testing LMSR predictions...');
     for (let i = 0; i < agents.length; i++) {
       const outcome = i % 2 === 0 ? Outcome.YES : Outcome.NO;
       const betPlaced = gameEngine.placeBet(agents[i].id, outcome, 100 + i * 50);

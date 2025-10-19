@@ -36,8 +36,8 @@ async function createAgentRuntime(
         // Game discovery
         GAME_SERVER_URL: process.env.GAME_SERVER_URL || 'http://localhost:8000',
         
-        // Betting (SEPARATE server!)
-        BETTING_SERVER_URL: process.env.BETTING_SERVER_URL || '',
+        // Prediction (SEPARATE server!)
+        PREDICTION_SERVER_URL: process.env.PREDICTION_SERVER_URL || '',
         
         // Blockchain
         RPC_URL: process.env.RPC_URL || 'http://localhost:8545',
@@ -84,7 +84,7 @@ async function startAgents(): Promise<void> {
 
   console.log('🔑 Configuration:');
   console.log(`   Game Server: ${process.env.GAME_SERVER_URL || 'Not set'}`);
-  console.log(`   Betting Server: ${process.env.BETTING_SERVER_URL || 'Not set (betting disabled)'}`);
+  console.log(`   Prediction Server: ${process.env.PREDICTION_SERVER_URL || 'Not set (predictions disabled)'}`);
   console.log(`   RPC URL: ${process.env.RPC_URL || 'http://localhost:8545'}`);
   console.log(`   Auto-Play: ${process.env.AGENT_AUTOPLAY || '1'}\n`);
 

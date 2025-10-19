@@ -26,7 +26,7 @@ export interface GetStatusData {
   gameId?: string;
   question?: string;
   day?: number;
-  bettingOpen?: boolean;
+  predictionsOpen?: boolean;
   market?: {
     yesOdds: number;
     noOdds: number;
@@ -37,13 +37,13 @@ export interface GetStatusData {
 }
 
 // Place Bet
-export interface PlaceBetParams {
+export interface MakePredictionParams {
   outcome: 'YES' | 'NO';
   amount: number;
 }
 
-export interface PlaceBetData {
-  betId: string;
+export interface MakePredictionData {
+  predictionId: string;
   outcome: string;
   amount: number;
   odds: number;

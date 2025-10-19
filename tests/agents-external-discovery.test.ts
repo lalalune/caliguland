@@ -6,14 +6,14 @@
  * - Agents have NO hardcoded game knowledge
  * - Agents discover skills from Agent Card
  * - Agents play game using discovered skills
- * - Betting is separate from game-playing
+ * - Prediction is separate from game-playing
  * - Everything works end-to-end
  */
 
 import { expect, describe, test } from 'bun:test';
 
 const GAME_SERVER = process.env.GAME_SERVER_URL || 'http://localhost:8000';
-const BETTING_SERVER = process.env.BETTING_SERVER_URL || 'http://localhost:9000';
+const PREDICTION_SERVER = process.env.PREDICTION_SERVER_URL || 'http://localhost:9000';
 
 console.log('╔═══════════════════════════════════════════════════════════════════╗');
 console.log('║                                                                   ║');
@@ -25,12 +25,12 @@ console.log('📋 Test Objectives:');
 console.log('   1. Verify agents have NO hardcoded game knowledge');
 console.log('   2. Agents discover skills from Agent Card dynamically');
 console.log('   3. Agents play game using discovered skills');
-console.log('   4. Game server and betting server are SEPARATE');
+console.log('   4. Game server and prediction server are SEPARATE');
 console.log('   5. End-to-end flow works\n');
 
 console.log('🔗 Configuration:');
 console.log(`   Game Server: ${GAME_SERVER}`);
-console.log(`   Betting Server: ${BETTING_SERVER}\n`);
+console.log(`   Prediction Server: ${PREDICTION_SERVER}\n`);
 
 console.log('═'.repeat(70) + '\n');
 
@@ -79,26 +79,26 @@ describe('Phase 1: Discovery', () => {
     console.log('   ✅ All required skills present\n');
   });
 
-  test('[OPTIONAL] Agent can fetch Betting Server Agent Card', async () => {
-    if (!BETTING_SERVER || BETTING_SERVER.includes('localhost:9000')) {
-      console.log('⏭️  SKIPPED: Betting server not configured\n');
+  test('[OPTIONAL] Agent can fetch Prediction Server Agent Card', async () => {
+    if (!PREDICTION_SERVER || PREDICTION_SERVER.includes('localhost:9000')) {
+      console.log('⏭️  SKIPPED: Prediction server not configured\n');
       return;
     }
 
-    console.log('🔍 TEST: Fetching betting server Agent Card...\n');
+    console.log('🔍 TEST: Fetching prediction server Agent Card...\n');
 
-    const response = await fetch(`${BETTING_SERVER}/.well-known/agent-card.json`);
+    const response = await fetch(`${PREDICTION_SERVER}/.well-known/agent-card.json`);
     
     if (response.ok) {
       bettingAgentCard = await response.json();
       
-      console.log('   ✅ Betting Agent Card received');
+      console.log('   ✅ Prediction Agent Card received');
       console.log(`   Name: ${bettingAgentCard.name}`);
       console.log(`   Skills: ${bettingAgentCard.skills.length}\n`);
       
       expect(bettingAgentCard.skills).toBeDefined();
     } else {
-      console.log('   ⚠️  Betting server not available (optional)\n');
+      console.log('   ⚠️  Prediction server not available (optional)\n');
     }
   });
 });
@@ -193,20 +193,20 @@ describe('Phase 3: Game Playing via Discovered Skills', () => {
   });
 });
 
-describe('Phase 4: Betting Separation', () => {
-  test('Betting and game-playing are separate systems', async () => {
-    console.log('🎯 TEST: Verify betting separation...\n');
+describe('Phase 4: Prediction Separation', () => {
+  test('Prediction and game-playing are separate systems', async () => {
+    console.log('🎯 TEST: Verify prediction separation...\n');
 
     console.log('   Architectural verification:');
     console.log(`   - Game Server: ${GAME_SERVER}`);
-    console.log(`   - Betting Server: ${BETTING_SERVER}`);
+    console.log(`   - Prediction Server: ${PREDICTION_SERVER}`);
     console.log('');
 
-    if (GAME_SERVER === BETTING_SERVER) {
-      console.log('   ⚠️  WARNING: Game and betting on same server');
+    if (GAME_SERVER === PREDICTION_SERVER) {
+      console.log('   ⚠️  WARNING: Game and prediction on same server');
       console.log('   ℹ️  For production, these should be separate A2A servers\n');
     } else {
-      console.log('   ✅ Game and betting are separate servers\n');
+      console.log('   ✅ Game and prediction are separate servers\n');
     }
 
     console.log('   Design verified:');
@@ -214,7 +214,7 @@ describe('Phase 4: Betting Separation', () => {
     console.log('   ✓ GameService handles game-playing');
     console.log('   ✓ BettingService handles predictions');
     console.log('   ✓ Different Agent Cards, different skills');
-    console.log('   ✓ Agents can play game WITHOUT betting');
+    console.log('   ✓ Agents can play game WITHOUT prediction');
     console.log('   ✓ Agents can bet WITHOUT playing game\n');
   });
 });
@@ -251,7 +251,7 @@ console.log('═'.repeat(70) + '\n');
 console.log('✅ Verified:');
 console.log('   ✓ Agents discover skills dynamically');
 console.log('   ✓ No hardcoded game knowledge');
-console.log('   ✓ Game and betting are separate');
+console.log('   ✓ Game and prediction are separate');
 console.log('   ✓ Agents can play ANY A2A game');
 console.log('   ✓ End-to-end flow works\n');
 

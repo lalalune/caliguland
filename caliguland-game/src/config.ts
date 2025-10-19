@@ -26,10 +26,10 @@ export const config = {
   insiderCluePercentage: 0.3, // 30% of players get clues
   insiderClueAccuracy: 0.7, // 70% are truthful
   
-  // Betting
+  // Predictions
   startingTokens: 1000,
-  maxBetAmount: 1000,
-  minBetAmount: 10,
+  maxPredictAmount: 1000,
+  minPredictAmount: 10,
   
   // Feed
   maxPostLength: 280,

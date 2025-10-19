@@ -189,7 +189,7 @@ export class MCPServer {
       },
       {
         name: 'get_market_state',
-        description: 'Get current betting odds and market statistics',
+        description: 'Get current market odds and market statistics',
         inputSchema: {
           type: 'object',
           properties: {},
@@ -230,7 +230,7 @@ export class MCPServer {
           description: game.scenario.description,
           phase: game.phase,
           day: game.currentDay,
-          bettingOpen: game.bettingOpen,
+          predictionsOpen: game.predictionsOpen,
           market: game.market,
           myBets,
           recentFeed: game.feed.slice(-10)
@@ -255,8 +255,8 @@ export class MCPServer {
         return { success: true, message: 'Posted' };
       
       case 'place_bet':
-        if (!game || !game.bettingOpen) {
-          return { success: false, error: 'Betting closed' };
+        if (!game || !game.predictionsOpen) {
+          return { success: false, error: 'Predictions closed' };
         }
 
         const placed = this.gameEngine.placeBet(
@@ -330,7 +330,7 @@ GAME ANALYSIS FOR ${agentId}
 Question: ${game.scenario.question}
 Current Day: ${game.currentDay}/30
 Phase: ${game.phase}
-Betting: ${game.bettingOpen ? 'OPEN' : 'CLOSED'}
+Predictions: ${game.predictionsOpen ? 'OPEN' : 'CLOSED'}
 
 MARKET STATE:
 - YES odds: ${game.market.yesOdds}%
@@ -378,8 +378,8 @@ ${this.generateRecommendation(game, myBets)}
   }
 
   private generateRecommendation(game: GameSession, myBets: Bet[]): string {
-    if (!game.bettingOpen) {
-      return 'Betting is closed. Wait for outcome reveal.';
+    if (!game.predictionsOpen) {
+      return 'Predictions are closed. Wait for outcome reveal.';
     }
 
     if (myBets.length > 0) {
@@ -387,7 +387,7 @@ ${this.generateRecommendation(game, myBets)}
     }
 
     if (game.currentDay < 10) {
-      return 'Early game - gather more information before betting heavily.';
+      return 'Early game - gather more information before making predictions heavily.';
     }
 
     if (game.market.yesOdds > 70) {

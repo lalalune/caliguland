@@ -252,7 +252,7 @@ describe('FULL GAME INTEGRATION - NO MOCKS', () => {
         'test-game',
         agents,
         [agents[0].id], // Winner
-        [agents[0].id, agents[1].id], // Correct bettors
+        [agents[0].id, agents[1].id], // Correct predictors
         [agents[2].id] // Betrayer
       );
 
@@ -339,7 +339,7 @@ describe('FULL GAME INTEGRATION - NO MOCKS', () => {
       console.log(`  ✓ Kelly criterion: bet ${betAmount} tokens`);
     });
 
-    it('should make betting decision with edge detection', () => {
+    it('should make prediction decision with edge detection', () => {
       const decision = strategy.makeBettingDecision({
         yesOdds: 40,
         noOdds: 60,
@@ -353,7 +353,7 @@ describe('FULL GAME INTEGRATION - NO MOCKS', () => {
         expect(['YES', 'NO']).toContain(decision.outcome);
         expect(decision.confidence).toBeGreaterThan(0);
 
-        console.log(`  ✓ Betting decision: ${decision.outcome} for ${decision.amount} tokens`);
+        console.log(`  ✓ Prediction decision: ${decision.outcome} for ${decision.amount} tokens`);
         console.log(`  ✓ Confidence: ${(decision.confidence * 100).toFixed(1)}%`);
       } else {
         console.log(`  ✓ Correctly decided not to bet (no edge)`);
@@ -446,7 +446,7 @@ describe('FULL GAME INTEGRATION - NO MOCKS', () => {
       console.log('    ✓ Direct messages working');
 
       // Place bets using LMSR
-      console.log('\n  Testing LMSR betting...');
+      console.log('\n  Testing LMSR predictions...');
       for (let i = 0; i < agents.length; i++) {
         const outcome = i % 2 === 0 ? Outcome.YES : Outcome.NO;
         const betPlaced = gameEngine.placeBet(agents[i].id, outcome, 100 + i * 20);

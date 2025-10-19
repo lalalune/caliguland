@@ -92,7 +92,7 @@ describe('GameEngine', () => {
     }, 15000); // 15 second timeout for this test
   });
 
-  describe('Betting', () => {
+  describe('Making Predictions', () => {
     it('should accept valid bets', async () => {
       // Add players
       const agent1: Agent = { id: 'agent-1', name: 'Agent 1', type: 'human', reputation: 50, wins: 0 };
@@ -109,7 +109,7 @@ describe('GameEngine', () => {
       
       const game = engine.getCurrentGame();
       expect(game).not.toBeNull();
-      expect(game?.bettingOpen).toBe(true);
+      expect(game?.predictionsOpen).toBe(true);
       
       // Place bet
       const betPlaced = engine.placeBet('agent-1', Outcome.YES, 100);
@@ -140,7 +140,7 @@ describe('GameEngine', () => {
       expect(newYesOdds).not.toBe(initialYesOdds);
     }, 15000);
 
-    it('should reject bets after betting closes', async () => {
+    it('should reject bets after predictions close', async () => {
       const agent1: Agent = { id: 'agent-1', name: 'Agent 1', type: 'human', reputation: 50, wins: 0 };
       const agent2: Agent = { id: 'agent-2', name: 'Agent 2', type: 'human', reputation: 50, wins: 0 };
       
@@ -151,9 +151,9 @@ describe('GameEngine', () => {
       
       const game = engine.getCurrentGame();
       
-      // Manually close betting
+      // Manually close predictions
       if (game) {
-        game.bettingOpen = false;
+        game.predictionsOpen = false;
       }
       
       // Try to place bet

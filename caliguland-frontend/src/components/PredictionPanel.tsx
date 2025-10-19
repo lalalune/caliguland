@@ -3,7 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import { api } from '../services/api';
 import { Outcome } from '../types/game';
 
-export function BettingPanel() {
+export function PredictionPanel() {
   const { gameState, playerId } = useGameStore();
   const [amount, setAmount] = useState(100);
   const [selectedOutcome, setSelectedOutcome] = useState<Outcome.YES | Outcome.NO>(Outcome.YES);
@@ -18,7 +18,7 @@ export function BettingPanel() {
     }
 
     if (!gameState?.bettingOpen) {
-      setError('Betting is closed');
+      setError('Predictions are closed');
       return;
     }
 
@@ -27,7 +27,7 @@ export function BettingPanel() {
     setSuccess('');
 
     try {
-      const result = await api.placeBet({
+      const result = await api.makePrediction({
         agentId: playerId,
         outcome: selectedOutcome,
         amount
@@ -68,7 +68,7 @@ export function BettingPanel() {
                   ? 'bg-green-500 text-white'
                   : 'bg-gray-700 hover:bg-gray-600'
               }`}
-              data-cy="bet-yes-button"
+              data-cy="prediction-yes-button"
             >
               YES
             </button>
@@ -79,7 +79,7 @@ export function BettingPanel() {
                   ? 'bg-red-500 text-white'
                   : 'bg-gray-700 hover:bg-gray-600'
               }`}
-              data-cy="bet-no-button"
+              data-cy="prediction-no-button"
             >
               NO
             </button>
@@ -99,7 +99,7 @@ export function BettingPanel() {
             value={amount}
             onChange={(e) => setAmount(parseInt(e.target.value))}
             className="w-full"
-            data-cy="bet-amount-slider"
+            data-cy="prediction-amount-slider"
           />
           <div className="flex justify-between text-xs text-gray-400 mt-1">
             <span>10</span>
@@ -136,7 +136,7 @@ export function BettingPanel() {
           onClick={handleBet}
           disabled={isBetting || !gameState?.bettingOpen || !playerId}
           className="btn btn-primary w-full text-sm py-2"
-          data-cy="place-bet-button"
+          data-cy="make-prediction-button"
         >
           {isBetting ? 'Placing Bet...' : `Bet ${amount} on ${selectedOutcome}`}
         </button>

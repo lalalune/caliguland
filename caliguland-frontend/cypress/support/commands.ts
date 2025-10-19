@@ -4,7 +4,7 @@ declare global {
   namespace Cypress {
     interface Chainable {
       joinGame(playerName: string): Chainable<void>;
-      placeBet(outcome: 'YES' | 'NO', amount: number): Chainable<void>;
+      makePrediction(outcome: 'YES' | 'NO', amount: number): Chainable<void>;
       postToFeed(content: string): Chainable<void>;
     }
   }
@@ -15,10 +15,10 @@ Cypress.Commands.add('joinGame', (playerName: string) => {
   cy.get('[data-cy="join-game-button"]').click();
 });
 
-Cypress.Commands.add('placeBet', (outcome: 'YES' | 'NO', amount: number) => {
-  cy.get(`[data-cy="bet-${outcome.toLowerCase()}-button"]`).click();
-  cy.get('[data-cy="bet-amount-slider"]').invoke('val', amount).trigger('input');
-  cy.get('[data-cy="place-bet-button"]').click();
+Cypress.Commands.add('makePrediction', (outcome: 'YES' | 'NO', amount: number) => {
+  cy.get(`[data-cy="prediction-${outcome.toLowerCase()}-button"]`).click();
+  cy.get('[data-cy="prediction-amount-slider"]').invoke('val', amount).trigger('input');
+  cy.get('[data-cy="make-prediction-button"]').click();
 });
 
 Cypress.Commands.add('postToFeed', (content: string) => {

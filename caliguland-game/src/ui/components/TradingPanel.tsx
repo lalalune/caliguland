@@ -57,8 +57,8 @@ export interface TradingPanelProps {
   marketState: MarketState;
   /** User's available balance */
   availableBalance: number;
-  /** Whether betting is currently open */
-  bettingOpen: boolean;
+  /** Whether predictions are currently open */
+  predictionsOpen: boolean;
   /** Callback when trade is submitted */
   onTrade: (outcome: Outcome, amount: number) => Promise<void>;
   /** User's current shares */
@@ -93,7 +93,7 @@ export interface TradingPanelProps {
 export const TradingPanel: React.FC<TradingPanelProps> = ({
   marketState,
   availableBalance,
-  bettingOpen,
+  predictionsOpen,
   onTrade,
   userShares = { yes: 0, no: 0 },
   isLoading = false,
@@ -166,11 +166,11 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
         setError('Amount must be greater than 0');
       } else if (numAmount > availableBalance) {
         setError('Insufficient balance');
-      } else if (!bettingOpen) {
-        setError('Betting is closed');
+      } else if (!predictionsOpen) {
+        setError('Predictions are closed');
       }
     }
-  }, [amount, availableBalance, bettingOpen]);
+  }, [amount, availableBalance, predictionsOpen]);
 
   /**
    * Handle max button click
@@ -191,7 +191,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
    * Handle trade submission
    */
   const handleSubmit = async () => {
-    if (!tradePreview || error || !bettingOpen) return;
+    if (!tradePreview || error || !predictionsOpen) return;
 
     setShowConfirmModal(true);
   };
@@ -255,7 +255,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
               ? 'bg-green-600 text-white shadow-lg scale-105'
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
           }`}
-          disabled={isLoading || !bettingOpen}
+          disabled={isLoading || !predictionsOpen}
         >
           <div className="text-lg">BUY YES</div>
           <div className="text-xs mt-1 opacity-80">
@@ -269,7 +269,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
               ? 'bg-red-600 text-white shadow-lg scale-105'
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
           }`}
-          disabled={isLoading || !bettingOpen}
+          disabled={isLoading || !predictionsOpen}
         >
           <div className="text-lg">BUY NO</div>
           <div className="text-xs mt-1 opacity-80">
@@ -290,14 +290,14 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
             className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white text-lg focus:outline-none focus:border-blue-500 transition-colors"
-            disabled={isLoading || !bettingOpen}
+            disabled={isLoading || !predictionsOpen}
             min="0"
             step="0.01"
           />
           <button
             onClick={handleMaxClick}
             className="absolute right-3 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded font-semibold transition-colors"
-            disabled={isLoading || !bettingOpen}
+            disabled={isLoading || !predictionsOpen}
           >
             MAX
           </button>
@@ -383,17 +383,17 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
       {/* Submit Button */}
       <button
         onClick={handleSubmit}
-        disabled={!tradePreview || !!error || !bettingOpen || isLoading}
+        disabled={!tradePreview || !!error || !predictionsOpen || isLoading}
         className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${
-          !tradePreview || !!error || !bettingOpen || isLoading
+          !tradePreview || !!error || !predictionsOpen || isLoading
             ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
             : selectedOutcome === 'YES'
             ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl'
             : 'bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl'
         }`}
       >
-        {!bettingOpen
-          ? 'Betting Closed'
+        {!predictionsOpen
+          ? 'Predictions Closed'
           : isLoading
           ? 'Loading...'
           : `Place Bet on ${selectedOutcome}`}
@@ -407,7 +407,7 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({
 
             <div className="bg-gray-900 rounded-lg p-4 mb-6 space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-400">Betting on</span>
+                <span className="text-gray-400">Predicting</span>
                 <span
                   className={`font-bold ${
                     tradePreview.outcome === 'YES' ? 'text-green-400' : 'text-red-400'

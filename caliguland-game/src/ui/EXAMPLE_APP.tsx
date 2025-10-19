@@ -87,7 +87,7 @@ export const CaligulandApp: React.FC = () => {
         id: '3',
         authorId: 'system',
         authorName: 'System',
-        content: 'Game Phase: Early Trading. Betting is now open!',
+        content: 'Game Phase: Early Trading. Predictions are now open!',
         timestamp: new Date(Date.now() - 60000), // 1 min ago
         isSystemMessage: true,
       },

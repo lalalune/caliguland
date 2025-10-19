@@ -156,7 +156,7 @@ export class GameEngine {
       directMessages: new Map(),
       groupChats: [],
       insiderClues: [],
-      bettingOpen: true,
+      predictionsOpen: true,
       revealed: false
     };
 
@@ -239,8 +239,8 @@ export class GameEngine {
       }
     }
 
-    // Close betting at Day 29 end
-    if (newDay >= 29 && this.currentGame.bettingOpen) {
+    // Close predictions at Day 29 end
+    if (newDay >= 29 && this.currentGame.predictionsOpen) {
       this.closeBetting();
     }
   }
@@ -330,12 +330,12 @@ export class GameEngine {
   private closeBetting() {
     if (!this.currentGame) return;
 
-    this.currentGame.bettingOpen = false;
+    this.currentGame.predictionsOpen = false;
     
     this.postToFeed({
       authorId: 'SYSTEM',
       authorName: 'Game System',
-      content: '🔒 Betting is now CLOSED. Prepare for the final reveal!',
+      content: '🔒 Predictions are now CLOSED. Prepare for the final reveal!',
       isSystemMessage: true
     });
 
@@ -408,7 +408,7 @@ export class GameEngine {
       }
     }
 
-    // Identify correct bettors (for reputation)
+    // Identify correct predictors (for reputation)
     const correctBettors = correctBets.map(b => b.agentId).filter((id, idx, arr) => arr.indexOf(id) === idx);
 
     // Identify betrayers (agents in groups who bet against their allies)
@@ -1039,7 +1039,7 @@ export class GameEngine {
   }
 
   public placeBet(agentId: string, outcome: Outcome.YES | Outcome.NO, amount: number): boolean {
-    if (!this.currentGame || !this.currentGame.bettingOpen || !this.marketMaker) {
+    if (!this.currentGame || !this.currentGame.predictionsOpen || !this.marketMaker) {
       return false;
     }
 
@@ -1177,7 +1177,7 @@ export class GameEngine {
   }
 
   public sellShares(agentId: string, outcome: Outcome.YES | Outcome.NO, numShares: number): boolean {
-    if (!this.currentGame || !this.currentGame.bettingOpen || !this.marketMaker) {
+    if (!this.currentGame || !this.currentGame.predictionsOpen || !this.marketMaker) {
       return false;
     }
 

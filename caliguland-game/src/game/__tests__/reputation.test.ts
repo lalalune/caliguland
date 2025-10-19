@@ -263,7 +263,7 @@ describe('ReputationEngine', () => {
         'game-123',
         agents,
         ['agent-1'],
-        ['agent-1', 'agent-3'], // Correct bettors
+        ['agent-1', 'agent-3'], // Correct predictors
         []
       );
 

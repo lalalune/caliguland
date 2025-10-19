@@ -38,7 +38,7 @@ interface IPredictionOracle {
  * @notice Example external betting contract using IPredictionOracle
  * @dev This shows how JejuMarket or any other contract can bet on Caliguland games
  */
-contract ExampleBettingContract {
+contract ExamplePredictionContract {
     IPredictionOracle public oracle;
 
     struct Bet {

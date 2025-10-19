@@ -17,9 +17,9 @@ describe('Complete Game Cycle', () => {
         cy.postToFeed('Hello from Cypress test!');
         cy.wait(1000);
         
-        // Try to place a bet if betting is open
-        if ($body.find('[data-cy="place-bet-button"]').length > 0) {
-          cy.placeBet('YES', 300);
+        // Try to place a bet if predictions are open
+        if ($body.find('[data-cy="make-prediction-button"]').length > 0) {
+          cy.makePrediction('YES', 300);
           cy.wait(1000);
         }
       }

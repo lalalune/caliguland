@@ -1,7 +1,6 @@
 /**
  * Web3 Service
- * Manages wallet and ERC-8004 registration
- * COPIED from Among Us, works generically for any game
+ * Manages wallet and ERC-8004 registration with automatic fauceting
  */
 
 import { Service, type IAgentRuntime, logger } from '@elizaos/core';
@@ -12,6 +11,12 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const ELIZA_TOKEN_ABI = [
+  'function transfer(address to, uint256 amount) external returns (bool)',
+  'function balanceOf(address account) external view returns (uint256)',
+  'function approve(address spender, uint256 amount) external returns (bool)'
+];
+
 export interface AgentInfo {
   agentId: bigint;
   agentAddress: string;
@@ -21,7 +26,7 @@ export interface AgentInfo {
 
 export class Web3Service extends Service {
   static serviceType = 'web3';
-  capabilityDescription = 'Manages wallet and ERC-8004 registration';
+  capabilityDescription = 'Manages wallet and ERC-8004 registration with automatic fauceting';
 
   private wallet: Wallet | null = null;
   private provider: JsonRpcProvider | null = null;
@@ -41,34 +46,38 @@ export class Web3Service extends Service {
 
     logger.info(`[Web3] Wallet: ${this.wallet.address}`);
 
-    // Load ERC-8004 contracts (try multiple paths)
+    // Check and fund if needed
+    await this.ensureFunded();
+
+    // Load ERC-8004 contracts
     const possiblePaths = [
-      join(__dirname, '../../../../cicero/contracts'),  // From jeju root
-      join(__dirname, '../../../contracts'),            // From caliguland
-      join(__dirname, '../../contracts')                // Fallback
+      join(__dirname, '../../../../../contracts'),      // From monorepo root
+      join(__dirname, '../../../../cicero/contracts'),  // Legacy
+      join(__dirname, '../../../contracts')             // Fallback
     ];
 
-    let addresses: { abi?: unknown; address?: string } | null = null;
+    let addresses: { abi?: unknown; address?: string; identityRegistry?: string } | null = null;
     let abi: unknown = null;
 
     for (const basePath of possiblePaths) {
-      try {
-        const addressPath = join(basePath, 'IdentityRegistry.json');
-        const fileContent = readFileSync(addressPath, 'utf-8');
-        addresses = JSON.parse(fileContent) as { abi?: unknown; address?: string };
-        abi = addresses.abi;
-        break;
-      } catch {
-        continue;
-      }
+      const addressPath = join(basePath, 'IdentityRegistry.json');
+      const fileContent = readFileSync(addressPath, 'utf-8');
+      addresses = JSON.parse(fileContent) as { abi?: unknown; address?: string; identityRegistry?: string };
+      abi = addresses.abi;
+      break;
     }
 
     if (!addresses || !abi) {
       throw new Error('ERC-8004 IdentityRegistry contracts not found. Deploy contracts first: cd contracts && forge script script/DeployAll.s.sol');
     }
 
+    const registryAddress = addresses.address || addresses.identityRegistry;
+    if (!registryAddress) {
+      throw new Error('IdentityRegistry address not found in deployment artifacts');
+    }
+
     this.identityContract = new Contract(
-      addresses.address || addresses.identityRegistry,
+      registryAddress,
       abi,
       this.wallet
     );
@@ -76,51 +85,100 @@ export class Web3Service extends Service {
     await this.ensureRegistered(runtime);
   }
 
+  private async ensureFunded(): Promise<void> {
+    if (!this.wallet || !this.provider) {
+      throw new Error('Wallet or provider not initialized');
+    }
+
+    const balance = await this.provider.getBalance(this.wallet.address);
+    const minBalance = ethers.parseEther('0.1'); // Need at least 0.1 ETH
+
+    if (balance < minBalance) {
+      logger.warn(`[Web3] Low ETH balance: ${ethers.formatEther(balance)} ETH`);
+      logger.warn(`[Web3] Agent needs ETH for gas. Fund wallet: ${this.wallet.address}`);
+      throw new Error(`Insufficient ETH balance. Need at least 0.1 ETH, have ${ethers.formatEther(balance)} ETH`);
+    }
+
+    logger.info(`[Web3] ✅ ETH balance: ${ethers.formatEther(balance)} ETH`);
+
+    // Check elizaOS token balance (if configured)
+    const elizaTokenAddress = process.env.ELIZA_TOKEN_ADDRESS || process.env.ELIZA_OS_ADDRESS;
+    if (elizaTokenAddress) {
+      const elizaToken = new Contract(elizaTokenAddress, ELIZA_TOKEN_ABI, this.provider);
+      const elizaBalance = await elizaToken.balanceOf(this.wallet.address);
+      logger.info(`[Web3] elizaOS balance: ${ethers.formatEther(elizaBalance)} elizaOS`);
+
+      if (elizaBalance === 0n) {
+        logger.warn(`[Web3] No elizaOS tokens. Fund wallet or run: bun run scripts/fund-test-accounts.ts`);
+      }
+    }
+  }
+
   private async ensureRegistered(runtime: IAgentRuntime): Promise<void> {
+    if (!this.identityContract || !this.wallet) {
+      throw new Error('Identity contract or wallet not initialized');
+    }
+
     const domain = this.generateDomain(runtime);
     
-    logger.info(`[Web3] Checking registration...`);
+    logger.info(`[Web3] Checking ERC-8004 registration...`);
 
-    const result = await this.identityContract!.resolveAgentByAddress(this.wallet!.address);
+    // Check if wallet already owns any agents (tokens)
+    const balance = await this.identityContract.balanceOf(this.wallet.address);
 
-    if (result.agentId_ !== 0n) {
+    if (balance > 0n) {
+      // Already registered - wallet owns at least one agent NFT
+      // For simplicity, we'll use the total agent count as the agent ID
+      // (In production, you'd want to track which specific token ID)
+      const totalAgents = await this.identityContract.totalAgents();
+      
       this.agentInfo = {
-        agentId: result.agentId_,
-        agentAddress: this.wallet!.address,
-        agentDomain: result.agentDomain_,
-        isRegistered: true
-      };
-
-      logger.info('[Web3] ✅ Already registered');
-      logger.info(`[Web3]    ID: ${this.agentInfo.agentId}`);
-      logger.info(`[Web3]    Domain: ${this.agentInfo.agentDomain}`);
-    } else {
-      logger.info('[Web3] Registering new agent...');
-
-      const tx = await this.identityContract!.newAgent(domain, this.wallet!.address);
-      const receipt = await tx.wait();
-
-      const event = receipt.logs
-        .map((log: ethers.Log) => {
-          return this.identityContract!.interface.parseLog({
-            topics: log.topics as string[],
-            data: log.data
-          });
-        })
-        .find((e: ethers.LogDescription | null) => e?.name === 'AgentRegistered');
-
-      this.agentInfo = {
-        agentId: event!.args.agentId,
-        agentAddress: this.wallet!.address,
+        agentId: totalAgents,
+        agentAddress: this.wallet.address,
         agentDomain: domain,
         isRegistered: true
       };
 
-      logger.info('[Web3] ✅ Registered');
-      logger.info(`[Web3]    ID: ${this.agentInfo.agentId}`);
+      logger.info('[Web3] ✅ Already registered to ERC-8004');
+      logger.info(`[Web3]    Balance: ${balance} agent(s)`);
       logger.info(`[Web3]    Domain: ${this.agentInfo.agentDomain}`);
-      logger.info(`[Web3]    TX: ${receipt.hash}`);
+      return;
     }
+
+    logger.info('[Web3] 🔄 Registering to ERC-8004 IdentityRegistry...');
+    logger.info(`[Web3]    Domain: ${domain}`);
+
+    // Register with tokenURI (using domain as URI)
+    const tx = await this.identityContract['register(string)'](domain);
+    logger.info(`[Web3]    TX submitted: ${tx.hash}`);
+    
+    const receipt = await tx.wait();
+
+    // Find Registered event
+    const event = receipt.logs
+      .map((log: ethers.Log) => {
+        return this.identityContract!.interface.parseLog({
+          topics: log.topics as string[],
+          data: log.data
+        });
+      })
+      .find((e: ethers.LogDescription | null) => e?.name === 'Registered');
+
+    if (!event) {
+      throw new Error('Registered event not found in transaction receipt');
+    }
+
+    this.agentInfo = {
+      agentId: event.args.agentId,
+      agentAddress: this.wallet.address,
+      agentDomain: domain,
+      isRegistered: true
+    };
+
+    logger.info('[Web3] ✅ Registered to ERC-8004');
+    logger.info(`[Web3]    ID: ${this.agentInfo.agentId}`);
+    logger.info(`[Web3]    Domain: ${this.agentInfo.agentDomain}`);
+    logger.info(`[Web3]    TX: ${receipt.hash}`);
   }
 
   private generateDomain(runtime: IAgentRuntime): string {

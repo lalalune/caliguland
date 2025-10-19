@@ -67,7 +67,7 @@ import type {
 <TradingPanel
   marketState={marketState}
   availableBalance={1000}
-  bettingOpen={true}
+  predictionsOpen={true}
   onTrade={handleTrade}
   userShares={{ yes: 50, no: 0 }}
 />
@@ -146,7 +146,7 @@ import type {
   noOdds={0.35}
   totalVolume={5000}
   activePlayers={20}
-  bettingOpen={true}
+  predictionsOpen={true}
 />
 ```
 
@@ -348,7 +348,7 @@ test('renders trading panel', () => {
     <TradingPanel
       marketState={mockMarketState}
       availableBalance={1000}
-      bettingOpen={true}
+      predictionsOpen={true}
       onTrade={jest.fn()}
     />
   );

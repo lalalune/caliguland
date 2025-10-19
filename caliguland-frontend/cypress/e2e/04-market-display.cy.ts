@@ -34,12 +34,12 @@ describe('Market Display', () => {
   it('should update odds when bet is placed', () => {
     cy.get('body').then(($body) => {
       if ($body.find('[data-cy="yes-odds"]').length > 0 && 
-          $body.find('[data-cy="place-bet-button"]').length > 0) {
+          $body.find('[data-cy="make-prediction-button"]').length > 0) {
         
         // Get initial odds
         cy.get('[data-cy="yes-odds"]').invoke('text').then((initialOdds) => {
           // Place a bet
-          cy.placeBet('YES', 500);
+          cy.makePrediction('YES', 500);
           cy.wait(2000);
           
           // Odds should update

@@ -4,7 +4,7 @@ import {
   JoinGameRequest,
   PostMessageRequest,
   SendDMRequest,
-  PlaceBetRequest,
+  MakePredictionRequest,
   CreateGroupChatRequest,
   Agent,
   DirectMessage
@@ -14,7 +14,29 @@ export function apiRouter(gameEngine: GameEngine): Router {
   const router = Router();
 
   /**
-   * POST /join - Join the game lobby
+   * @swagger
+   * /api/v1/join:
+   *   post:
+   *     summary: Join the game lobby
+   *     tags: [game]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               agentId:
+   *                 type: string
+   *               signature:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Successfully joined the game
+   *       400:
+   *         description: Game lobby is full
+   *       403:
+   *         description: Agent not registered in ERC-8004
    */
   router.post('/join', async (req: Request, res: Response) => {
     try {
@@ -96,7 +118,18 @@ export function apiRouter(gameEngine: GameEngine): Router {
   });
 
   /**
-   * GET /game - Get current game state
+   * @swagger
+   * /api/v1/game:
+   *   get:
+   *     summary: Get current game state
+   *     tags: [game]
+   *     responses:
+   *       200:
+   *         description: Current game state or lobby state
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/GameState'
    */
   router.get('/game', (req: Request, res: Response) => {
     const game = gameEngine.getCurrentGame();
@@ -121,7 +154,7 @@ export function apiRouter(gameEngine: GameEngine): Router {
           bets: []
         },
         feed: [],
-        bettingOpen: false,
+        predictionsOpen: false,
         revealed: false
       });
     }
@@ -143,14 +176,27 @@ export function apiRouter(gameEngine: GameEngine): Router {
       })),
       market: game.market,
       feed: game.feed.slice(-50),
-      bettingOpen: game.bettingOpen,
+      predictionsOpen: game.predictionsOpen,
       revealed: game.revealed,
       finalOutcome: game.finalOutcome
     });
   });
 
   /**
-   * GET /feed - Get public feed
+   * @swagger
+   * /api/v1/feed:
+   *   get:
+   *     summary: Get public feed posts
+   *     tags: [social]
+   *     parameters:
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           default: 100
+   *     responses:
+   *       200:
+   *         description: List of feed posts
    */
   router.get('/feed', (req: Request, res: Response) => {
     const game = gameEngine.getCurrentGame();
@@ -166,7 +212,31 @@ export function apiRouter(gameEngine: GameEngine): Router {
   });
 
   /**
-   * POST /post - Post to public feed
+   * @swagger
+   * /api/v1/post:
+   *   post:
+   *     summary: Post to public feed
+   *     tags: [social]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               agentId:
+   *                 type: string
+   *               content:
+   *                 type: string
+   *               replyTo:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Post successful
+   *       400:
+   *         description: No active game
+   *       403:
+   *         description: Agent not in game
    */
   router.post('/post', (req: Request, res: Response) => {
     try {
@@ -245,19 +315,42 @@ export function apiRouter(gameEngine: GameEngine): Router {
   });
 
   /**
-   * POST /bet - Place a bet
+   * @swagger
+   * /api/v1/bet:
+   *   post:
+   *     summary: Place a bet
+   *     tags: [prediction]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               agentId:
+   *                 type: string
+   *               outcome:
+   *                 type: string
+   *                 enum: [yes, no]
+   *               amount:
+   *                 type: number
+   *     responses:
+   *       200:
+   *         description: Bet placed successfully
+   *       400:
+   *         description: Predictions are closed or invalid bet
    */
   router.post('/bet', (req: Request, res: Response) => {
     try {
-      const { agentId, outcome, amount } = req.body as PlaceBetRequest;
+      const { agentId, outcome, amount } = req.body as MakePredictionRequest;
 
       const game = gameEngine.getCurrentGame();
       if (!game) {
         return res.status(400).json({ error: 'No active game' });
       }
 
-      if (!game.bettingOpen) {
-        return res.status(400).json({ error: 'Betting is closed' });
+      if (!game.predictionsOpen) {
+        return res.status(400).json({ error: 'Predictions are closed' });
       }
 
       const placed = gameEngine.placeBet(agentId, outcome, amount);
@@ -277,7 +370,14 @@ export function apiRouter(gameEngine: GameEngine): Router {
   });
 
   /**
-   * GET /market - Get current market state
+   * @swagger
+   * /api/v1/market:
+   *   get:
+   *     summary: Get current market state
+   *     tags: [prediction]
+   *     responses:
+   *       200:
+   *         description: Current market state
    */
   router.get('/market', (req: Request, res: Response) => {
     const game = gameEngine.getCurrentGame();

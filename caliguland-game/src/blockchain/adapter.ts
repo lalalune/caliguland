@@ -7,7 +7,7 @@ import { ethers, Wallet, Contract, JsonRpcProvider } from 'ethers';
 import { Outcome } from '../types';
 
 // Contract ABIs
-const JEJU_MARKET_ABI = [
+const PREDIMARKET_ABI = [
   'function buy(bytes32 sessionId, bool outcome, uint256 elizaOSAmount, uint256 minShares) external returns (uint256 shares)',
   'function sell(bytes32 sessionId, bool outcome, uint256 numShares, uint256 minProceeds) external returns (uint256 proceeds)',
   'function resolveMarket(bytes32 sessionId) external',
@@ -108,7 +108,7 @@ export class BlockchainAdapter {
       // Initialize contracts
       this.contracts.jejuMarket = new Contract(
         config.contracts.jejuMarket,
-        JEJU_MARKET_ABI,
+        PREDIMARKET_ABI,
         this.wallet
       );
 
@@ -238,7 +238,7 @@ export class BlockchainAdapter {
       console.log('   Question:', question);
       console.log('   Liquidity B:', liquidityB);
 
-      // Note: JejuMarket doesn't have a createMarket function
+      // Note: Predimarket doesn't have a createMarket function
       // Markets are created implicitly on first buy
       // We just log this for now
       console.log('ℹ️  Market will be created on first bet');
@@ -272,7 +272,7 @@ export class BlockchainAdapter {
       console.log('   Session ID:', sessionId);
       console.log('   Agent:', agentAddress);
       console.log('   Outcome:', outcome);
-      console.log('   Amount:', amount, 'ELIZA');
+      console.log('   Amount:', amount, 'elizaOS');
 
       // Check allowance
       const allowance = await this.contracts.elizaToken.allowance(
@@ -281,7 +281,7 @@ export class BlockchainAdapter {
       );
 
       if (allowance < amountWei) {
-        console.log('   Approving ELIZA token...');
+        console.log('   Approving elizaOS token...');
         const approveTx = await this.contracts.elizaToken.approve(
           this.config.contracts.jejuMarket,
           ethers.MaxUint256
@@ -461,7 +461,7 @@ export class BlockchainAdapter {
 
       const payout = event ? event.args.amount : 0n;
 
-      console.log('✅ Payout claimed:', ethers.formatEther(payout), 'ELIZA');
+      console.log('✅ Payout claimed:', ethers.formatEther(payout), 'elizaOS');
 
       return payout;
     } catch (error) {
@@ -526,7 +526,7 @@ export class BlockchainAdapter {
   }
 
   /**
-   * Get ELIZA token balance
+   * Get elizaOS token balance
    */
   async getBalance(address?: string): Promise<bigint> {
     if (!this.enabled || !this.contracts.elizaToken) return 0n;
@@ -542,7 +542,7 @@ export class BlockchainAdapter {
   }
 
   /**
-   * Transfer ELIZA tokens (for testing)
+   * Transfer elizaOS tokens (for testing)
    */
   async transfer(to: string, amount: number): Promise<string | null> {
     if (!this.enabled || !this.contracts.elizaToken) return null;

@@ -62,14 +62,14 @@ test.describe('Caliguland Complete E2E', () => {
     console.log('💰 Players placing bets...');
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
-      const yesButton = page.locator('[data-cy="bet-yes-button"]');
-      const placeBetButton = page.locator('[data-cy="place-bet-button"]');
+      const yesButton = page.locator('[data-cy="prediction-yes-button"]');
+      const placeBetButton = page.locator('[data-cy="make-prediction-button"]');
       
       if (await yesButton.count() > 0 && await placeBetButton.count() > 0) {
         const outcome = i % 2 === 0 ? 'yes' : 'no';
-        await page.locator(`[data-cy="bet-${outcome}-button"]`).click();
+        await page.locator(`[data-cy="prediction-${outcome}-button"]`).click();
         
-        const slider = page.locator('[data-cy="bet-amount-slider"]');
+        const slider = page.locator('[data-cy="prediction-amount-slider"]');
         await slider.fill(String(100 + i * 50));
         
         await placeBetButton.click();

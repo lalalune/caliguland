@@ -146,7 +146,7 @@ export interface GameSession {
   directMessages: Map<string, DirectMessage[]>;
   groupChats: GroupChat[];
   insiderClues: InsiderClue[];
-  bettingOpen: boolean;
+  predictionsOpen: boolean;
   revealed: boolean;
   finalOutcome?: Outcome;
   oracleAttestation?: OracleAttestation;
@@ -185,7 +185,7 @@ export interface SendDMRequest {
   content: string;
 }
 
-export interface PlaceBetRequest {
+export interface MakePredictionRequest {
   agentId: string;
   outcome: Outcome.YES | Outcome.NO;
   amount: number;

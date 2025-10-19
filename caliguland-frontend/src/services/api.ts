@@ -1,7 +1,7 @@
 import type {
   GameState,
   JoinGameRequest,
-  PlaceBetRequest,
+  MakePredictionRequest,
   PostMessageRequest,
   SendDMRequest,
   DirectMessage
@@ -38,7 +38,7 @@ class APIService {
     });
   }
 
-  async placeBet(data: PlaceBetRequest): Promise<{ success: boolean; message: string }> {
+  async makePrediction(data: MakePredictionRequest): Promise<{ success: boolean; message: string }> {
     return this.request('/bet', {
       method: 'POST',
       body: JSON.stringify(data),

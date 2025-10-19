@@ -496,7 +496,7 @@ Write ONLY the post content, no quotes or extra text:`;
 
   /**
    * React to market changes
-   * NPCs comment on odds movements and betting patterns
+   * NPCs comment on odds movements and prediction patterns
    */
   public async reactToMarketChange(
     npcId: string,
@@ -626,7 +626,7 @@ Write ONLY the post content, no quotes or extra text:`;
     const reactionTemplates = {
       media: [
         `📊 Market Alert: YES odds ${direction === 'up' ? 'surge' : 'drop'} ${magnitude}% to ${newOdds.yesOdds}%`,
-        `Breaking: Sudden ${magnitude}% shift in betting patterns. Someone knows something.`,
+        `Breaking: Sudden ${magnitude}% shift in prediction patterns. Someone knows something.`,
         `Analysis: Market now ${newOdds.yesOdds}% YES. ${direction === 'up' ? 'Bullish' : 'Bearish'} sentiment.`,
         `Day ${currentDay} Update: Odds moved significantly. Current: ${newOdds.yesOdds}% YES.`
       ],

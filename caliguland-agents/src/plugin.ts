@@ -4,8 +4,8 @@
  * KEY DESIGN: This plugin has NO hardcoded game knowledge!
  * - Discovers game skills dynamically from A2A Agent Card
  * - Works with ANY A2A-compliant game server
- * - Separates game-playing from betting
- * - Can connect to multiple A2A servers (game + betting)
+ * - Separates game-playing from prediction
+ * - Can connect to multiple A2A servers (game + prediction)
  */
 
 import type { Plugin } from '@elizaos/core';
@@ -13,7 +13,7 @@ import { logger } from '@elizaos/core';
 import { Web3Service } from './services/web3Service.js';
 import { A2AClientService } from './services/a2aClient.js';
 import { GameDiscoveryService } from './services/gameDiscoveryService.js';
-import { BettingService } from './services/bettingService.js';
+import { PredictionService } from './services/predictionService.js';
 import { AutoPlayService } from './services/autoPlayService.js';
 import { z } from 'zod';
 
@@ -49,12 +49,12 @@ const configSchema = z.object({
     .optional()
     .describe('Direct A2A game server URL (optional - will use registry if not provided)'),
   
-  // Optional: Direct betting server URL (separate from game)
-  BETTING_SERVER_URL: z
+  // Optional: Direct prediction server URL (separate from game)
+  PREDICTION_SERVER_URL: z
     .string()
     .url()
     .optional()
-    .describe('A2A betting server URL (separate from game server)'),
+    .describe('A2A prediction server URL (separate from game server)'),
   
   // Auto-play mode
   AGENT_AUTOPLAY: z
@@ -83,7 +83,7 @@ const genericGamePlugin: Plugin = {
       RPC_URL: process.env.RPC_URL || config.RPC_URL,
       AGENT_PRIVATE_KEY: process.env.AGENT_PRIVATE_KEY || config.AGENT_PRIVATE_KEY,
       GAME_SERVER_URL: process.env.GAME_SERVER_URL || config.GAME_SERVER_URL,
-      BETTING_SERVER_URL: process.env.BETTING_SERVER_URL || config.BETTING_SERVER_URL,
+      PREDICTION_SERVER_URL: process.env.PREDICTION_SERVER_URL || config.PREDICTION_SERVER_URL,
       AGENT_AUTOPLAY: process.env.AGENT_AUTOPLAY || config.AGENT_AUTOPLAY
     };
 
@@ -107,8 +107,8 @@ const genericGamePlugin: Plugin = {
       logger.warn('   ⚠️  No game server or registry configured - agent will need manual connection');
     }
     
-    if (validatedConfig.BETTING_SERVER_URL) {
-      logger.info(`   Betting Server: ${validatedConfig.BETTING_SERVER_URL}`);
+    if (validatedConfig.PREDICTION_SERVER_URL) {
+      logger.info(`   Prediction Server: ${validatedConfig.PREDICTION_SERVER_URL}`);
     }
     
     logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
@@ -118,13 +118,13 @@ const genericGamePlugin: Plugin = {
   // 1. Web3Service - Setup wallet, register on ERC-8004
   // 2. GameDiscoveryService - Find games via registry OR connect to direct URL
   // 3. A2AClientService - Connect to discovered game, fetch Agent Card, load skills dynamically
-  // 4. BettingService - Connect to betting server (SEPARATE from game)
+  // 4. PredictionService - Connect to prediction server (SEPARATE from game)
   // 5. AutoPlayService - Autonomous gameplay using discovered skills
   services: [
     Web3Service,
     GameDiscoveryService,
     A2AClientService,
-    BettingService,
+    PredictionService,
     AutoPlayService
   ],
 

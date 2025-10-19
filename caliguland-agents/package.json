@@ -9,6 +9,9 @@
     "build": "tsc",
     "lint": "tsc --noEmit",
     "test": "bun test",
+    "test:registration": "bun run tests/test-agent-registration.ts",
+    "test:startup": "bun run tests/verify-agent-startup.ts",
+    "test:fund": "bun run tests/fund-agent-wallets.ts",
     "verify": "bun run tests/verify-setup.ts"
   },
   "dependencies": {

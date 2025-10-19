@@ -32,10 +32,10 @@ export class GameDiscoveryService extends Service {
       logger.info(`[Discovery] ✅ Game server: ${this.gameServer.name} (direct)`);
     }
 
-    const directBettingUrl = runtime.getSetting('BETTING_SERVER_URL');
+    const directBettingUrl = runtime.getSetting('PREDICTION_SERVER_URL');
     if (directBettingUrl) {
-      this.bettingServer = await this.connectDirect(directBettingUrl, 'betting');
-      logger.info(`[Discovery] ✅ Betting server: ${this.bettingServer.name} (direct)`);
+      this.bettingServer = await this.connectDirect(directBettingUrl, 'prediction');
+      logger.info(`[Discovery] ✅ Prediction server: ${this.bettingServer.name} (direct)`);
     }
 
     // Method 2: Registry discovery (if no direct URL)
@@ -60,28 +60,23 @@ export class GameDiscoveryService extends Service {
    * Connect to a server directly via URL
    * Fetches Agent Card to get server name and description
    */
-  private async connectDirect(url: string, type: 'game' | 'betting'): Promise<GameServerInfo> {
-    try {
-      // Fetch Agent Card
-      const cardUrl = `${url}/.well-known/agent-card.json`;
-      const response = await fetch(cardUrl);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch Agent Card from ${cardUrl}: ${response.statusText}`);
-      }
-
-      const card = await response.json();
-
-      return {
-        name: card.name || `${type} Server`,
-        url: card.url || url,
-        description: card.description || '',
-        discoveryMethod: 'direct'
-      };
-    } catch (error) {
-      logger.error(`[Discovery] Failed to connect to ${url}:`, error);
-      throw error;
+  private async connectDirect(url: string, type: 'game' | 'prediction'): Promise<GameServerInfo> {
+    // Fetch Agent Card
+    const cardUrl = `${url}/.well-known/agent-card.json`;
+    const response = await fetch(cardUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Agent Card from ${cardUrl}: ${response.statusText}`);
     }
+
+    const card = await response.json();
+
+    return {
+      name: card.name || `${type} Server`,
+      url: card.url || url,
+      description: card.description || '',
+      discoveryMethod: 'direct'
+    };
   }
 
   /**
@@ -91,58 +86,47 @@ export class GameDiscoveryService extends Service {
   private async discoverViaRegistry(
     runtime: IAgentRuntime,
     registryAddress: string,
-    type: 'game' | 'betting'
+    type: 'game' | 'prediction'
   ): Promise<GameServerInfo | null> {
-    try {
-      logger.info(`[Discovery] Querying registry ${registryAddress} for ${type} servers...`);
+    logger.info(`[Discovery] Querying registry ${registryAddress} for ${type} servers...`);
 
-      const rpcUrl = runtime.getSetting('RPC_URL') || 'http://localhost:8545';
-      const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const rpcUrl = runtime.getSetting('RPC_URL') || 'http://localhost:8545';
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
 
-      // ERC-8004 IdentityRegistry ABI (minimal interface)
-      const registryABI = [
-        'function getAgentCount() external view returns (uint256)',
-        'function getAgentByIndex(uint256 index) external view returns (address)',
-        'function getAgentMetadata(address agent) external view returns (string memory)'
-      ];
+    // ERC-8004 IdentityRegistry ABI (minimal interface)
+    const registryABI = [
+      'function getAgentCount() external view returns (uint256)',
+      'function getAgentByIndex(uint256 index) external view returns (address)',
+      'function getAgentMetadata(address agent) external view returns (string memory)'
+    ];
 
-      const registry = new ethers.Contract(registryAddress, registryABI, provider);
+    const registry = new ethers.Contract(registryAddress, registryABI, provider);
 
-      // Get total agent count
-      const agentCount = await registry.getAgentCount();
-      logger.info(`[Discovery] Found ${agentCount} registered agents`);
+    // Get total agent count
+    const agentCount = await registry.getAgentCount();
+    logger.info(`[Discovery] Found ${agentCount} registered agents`);
 
-      // Query each agent's metadata
-      for (let i = 0; i < agentCount; i++) {
-        try {
-          const agentAddress = await registry.getAgentByIndex(i);
-          const metadataJson = await registry.getAgentMetadata(agentAddress);
-          
-          if (!metadataJson) continue;
+    // Query each agent's metadata
+    for (let i = 0; i < agentCount; i++) {
+      const agentAddress = await registry.getAgentByIndex(i);
+      const metadataJson = await registry.getAgentMetadata(agentAddress);
+      
+      if (!metadataJson) continue;
 
-          const metadata = JSON.parse(metadataJson);
-          
-          // Check if this is the server type we're looking for
-          const serverType = type === 'game' ? 'game-server' : 'betting-server';
-          if (metadata.type === serverType && metadata.url) {
-            // Try to connect to this server
-            const serverInfo = await this.connectDirect(metadata.url, type);
-            logger.info(`[Discovery] Found ${type} server via registry: ${serverInfo.name}`);
-            return { ...serverInfo, discoveryMethod: 'registry' };
-          }
-        } catch (error) {
-          // Skip invalid agents
-          logger.debug(`[Discovery] Skipping agent at index ${i}:`, error);
-          continue;
-        }
+      const metadata = JSON.parse(metadataJson);
+      
+      // Check if this is the server type we're looking for
+      const serverType = type === 'game' ? 'game-server' : 'prediction-server';
+      if (metadata.type === serverType && metadata.url) {
+        // Connect to this server
+        const serverInfo = await this.connectDirect(metadata.url, type);
+        logger.info(`[Discovery] Found ${type} server via registry: ${serverInfo.name}`);
+        return { ...serverInfo, discoveryMethod: 'registry' };
       }
-
-      logger.info(`[Discovery] No ${type} servers found in registry`);
-      return null;
-    } catch (error) {
-      logger.error('[Discovery] Registry query failed:', error);
-      return null;
     }
+
+    logger.info(`[Discovery] No ${type} servers found in registry`);
+    return null;
   }
 
   // ============================================================================

@@ -11,7 +11,7 @@ import { generateAgentCard } from './agentCard';
 import { Outcome } from '../types';
 import type {
   JoinGameParams,
-  PlaceBetParams,
+  MakePredictionParams,
   SellSharesParams,
   PostToFeedParams,
   SendDMParams,
@@ -347,7 +347,7 @@ export class A2AServer {
             question: game.scenario.question,
             phase: game.phase,
             day: game.currentDay,
-            bettingOpen: game.bettingOpen,
+            predictionsOpen: game.predictionsOpen,
             market: {
               yesOdds: game.market.yesOdds,
               noOdds: game.market.noOdds
@@ -485,7 +485,7 @@ export class A2AServer {
           }
         };
       
-      case 'place-bet':
+      case 'make-prediction':
         const outcome = requireString(data.outcome, 'outcome') as 'YES' | 'NO';
         const amount = requireNumber(data.amount, "amount");
 
@@ -493,8 +493,8 @@ export class A2AServer {
           return { success: false, message: 'Missing outcome or amount' };
         }
 
-        if (!game || !game.bettingOpen) {
-          return { success: false, message: 'Betting is closed' };
+        if (!game || !game.predictionsOpen) {
+          return { success: false, message: 'Predictions are closed' };
         }
 
         // Convert string to Outcome enum
@@ -519,7 +519,7 @@ export class A2AServer {
           return { success: false, message: 'Missing outcome or shares' };
         }
 
-        if (!game || !game.bettingOpen) {
+        if (!game || !game.predictionsOpen) {
           return { success: false, message: 'Trading is closed' };
         }
 

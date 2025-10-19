@@ -55,8 +55,8 @@ export interface GameStatusProps {
   totalVolume: number;
   /** Number of active players */
   activePlayers: number;
-  /** Whether betting is open */
-  bettingOpen: boolean;
+  /** Whether predictions are open */
+  predictionsOpen: boolean;
   /** Loading state */
   isLoading?: boolean;
 }
@@ -81,7 +81,7 @@ export const GameStatus: React.FC<GameStatusProps> = ({
   noOdds,
   totalVolume,
   activePlayers,
-  bettingOpen,
+  predictionsOpen,
   isLoading = false,
 }) => {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -317,22 +317,22 @@ export const GameStatus: React.FC<GameStatusProps> = ({
             <div className="text-lg font-bold text-white">{activePlayers}</div>
           </div>
 
-          {/* Betting Status */}
+          {/* Prediction Status */}
           <div className="px-6 py-4 text-center">
-            <div className="text-xs text-gray-400 mb-1">Betting</div>
+            <div className="text-xs text-gray-400 mb-1">Predictions</div>
             <div
               className={`text-lg font-bold ${
-                bettingOpen ? 'text-green-400' : 'text-red-400'
+                predictionsOpen ? 'text-green-400' : 'text-red-400'
               }`}
             >
-              {bettingOpen ? 'Open' : 'Closed'}
+              {predictionsOpen ? 'Open' : 'Closed'}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Betting Closed Warning */}
-      {!bettingOpen && phase !== GamePhase.ENDED && (
+      {/* Predictions Closed Warning */}
+      {!predictionsOpen && phase !== GamePhase.ENDED && (
         <div className="bg-red-900/30 border border-red-700 rounded-lg p-4 flex items-center gap-3">
           <svg className="w-6 h-6 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path
@@ -342,7 +342,7 @@ export const GameStatus: React.FC<GameStatusProps> = ({
             />
           </svg>
           <div>
-            <div className="text-red-400 font-semibold">Betting is now closed</div>
+            <div className="text-red-400 font-semibold">Predictions are now closed</div>
             <div className="text-red-300 text-sm">
               Prepare for the final outcome reveal!
             </div>

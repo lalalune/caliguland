@@ -1,6 +1,6 @@
 /**
  * Agent Strategy Engine
- * Implements intelligent betting strategies and alliance decision-making
+ * Implements intelligent prediction strategies and alliance decision-making
  */
 
 export interface InformationSignal {
@@ -66,7 +66,7 @@ export class AgentStrategyEngine {
   }
 
   /**
-   * Set betting strategy
+   * Set prediction strategy
    */
   public setStrategy(strategy: string): void {
     this.currentStrategy = strategy;
@@ -173,7 +173,7 @@ export class AgentStrategyEngine {
   }
 
   /**
-   * Make betting decision
+   * Make prediction decision
    */
   public makeBettingDecision(market: MarketState): BettingDecision {
     const belief = this.analyzeInformation();

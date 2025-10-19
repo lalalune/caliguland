@@ -1,5 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createServer } from 'http';
 import { GameEngine, BroadcastMessage } from './game/engine';
@@ -7,15 +9,76 @@ import { apiRouter } from './api/routes';
 import { A2AServer } from './a2a/server';
 import { MCPServer } from './mcp/server';
 import { config } from './config';
+import { autoRegisterToRegistry } from './a2a/registry';
 
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws' });
 
+// Swagger configuration
+const swaggerOptions: swaggerJsdoc.Options = {
+  definition: {
+    openapi: '3.0.3',
+    info: {
+      title: 'VibeVM Prediction Game API',
+      version: '0.1.0',
+      description: 'ERC-8004 Social Prediction Game with TEE Integration - API for joining games, placing bets, and social interactions',
+    },
+    servers: [
+      {
+        url: process.env.SERVER_URL || `http://localhost:${config.port}`,
+        description: 'Game server',
+      },
+    ],
+    tags: [
+      { name: 'game', description: 'Game state and lobby endpoints' },
+      { name: 'social', description: 'Feed and messaging endpoints' },
+      { name: 'prediction', description: 'Prediction and market endpoints' },
+    ],
+    components: {
+      schemas: {
+        Agent: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            type: { type: 'string', enum: ['human', 'ai'] },
+            reputation: { type: 'number' },
+            wins: { type: 'number' },
+          },
+        },
+        GameState: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            question: { type: 'string' },
+            description: { type: 'string' },
+            phase: { type: 'string', enum: ['LOBBY', 'SOCIAL', 'BETTING', 'RESOLVED'] },
+            currentDay: { type: 'number' },
+            maxDay: { type: 'number' },
+            players: { type: 'array', items: { $ref: '#/components/schemas/Agent' } },
+            predictionsOpen: { type: 'boolean' },
+            revealed: { type: 'boolean' },
+          },
+        },
+      },
+    },
+  },
+  apis: ['./src/api/routes.ts'],
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Swagger UI
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'VibeVM Game API',
+}));
 
 // Initialize Game Engine
 const gameEngine = new GameEngine({
@@ -162,9 +225,24 @@ server.listen(config.port, () => {
   console.log(`🎮 VibeVM Game Server listening on port ${config.port}`);
   console.log(`📡 WebSocket endpoint: ws://localhost:${config.port}/ws`);
   console.log(`🌐 HTTP API: http://localhost:${config.port}/api/v1`);
-  console.log(`🎯 Game UI: http://localhost:${config.port}/index.html`);
   console.log(`⏱️  Game duration: ${config.gameDurationMs / 60000} minutes`);
   console.log(`👥 Players: ${config.minPlayers}-${config.maxPlayers}`);
+  
+  // Always try to register to ERC-8004 (smart detection: Jeju → Anvil → graceful skip)
+  autoRegisterToRegistry(SERVER_URL, 'VibeVM Prediction Game')
+    .then(result => {
+      if (result.registered) {
+        console.log(`[ERC-8004] ✅ Registered as Agent #${result.agentId}`);
+      } else if (result.error && !result.error.includes('not configured')) {
+        console.log(`[ERC-8004] Registration skipped: ${result.error}`);
+      }
+    })
+    .catch(error => {
+      // Silent fallback - game works without blockchain
+      if (!error.message?.includes('not configured')) {
+        console.log('[ERC-8004] Registration unavailable:', error.message);
+      }
+    });
 });
 
 // Graceful shutdown

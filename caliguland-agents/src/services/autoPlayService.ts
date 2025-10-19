@@ -19,7 +19,7 @@
 
 import { Service, type IAgentRuntime, logger } from '@elizaos/core';
 import { A2AClientService, type A2ASkill } from './a2aClient.js';
-import { BettingService } from './bettingService.js';
+import { PredictionService } from './predictionService.js';
 import { AgentStrategyEngine, type InformationSignal } from './agentStrategy.js';
 
 // Type definitions for game status and related data structures
@@ -66,7 +66,7 @@ export class AutoPlayService extends Service {
   capabilityDescription = 'Autonomous gameplay using dynamically discovered skills with intelligent strategy';
 
   private a2aClient: A2AClientService | null = null;
-  private bettingService: BettingService | null = null;
+  private predictionService: PredictionService | null = null;
   private tickTimer: NodeJS.Timeout | null = null;
   private strategy: AgentStrategyEngine = new AgentStrategyEngine(1000);
   private hasBet: boolean = false;
@@ -84,7 +84,7 @@ export class AutoPlayService extends Service {
     const maxRetries = 20;
     for (let i = 0; i < maxRetries; i++) {
       this.a2aClient = runtime.getService('a2a-client') as A2AClientService;
-      this.bettingService = runtime.getService('betting') as BettingService;
+      this.predictionService = runtime.getService('prediction') as PredictionService;
       
       if (this.a2aClient) break;
       
@@ -104,11 +104,7 @@ export class AutoPlayService extends Service {
     if (this.tickTimer) return;
 
     this.tickTimer = setInterval(async () => {
-      try {
-        await this.tick();
-      } catch (err) {
-        logger.warn(`[AutoPlay] Tick error: ${String(err)}`);
-      }
+      await this.tick();
     }, 5000); // Tick every 5 seconds
   }
 
@@ -181,7 +177,7 @@ export class AutoPlayService extends Service {
       await this.attemptAllianceFormation(status, skills);
     }
 
-    // Make betting decision using Kelly criterion
+    // Make prediction decision using Kelly criterion
     if (!this.hasBet && status.market) {
       const decision = this.strategy.makeBettingDecision({
         yesOdds: status.market.yesOdds || 50,
@@ -192,12 +188,12 @@ export class AutoPlayService extends Service {
       });
 
       if (decision.shouldBet) {
-        logger.info(`[AutoPlay] 📊 Betting decision: ${decision.outcome} for ${decision.amount} (confidence: ${(decision.confidence * 100).toFixed(1)}%)`);
+        logger.info(`[AutoPlay] 📊 Prediction decision: ${decision.outcome} for ${decision.amount} (confidence: ${(decision.confidence * 100).toFixed(1)}%)`);
         logger.info(`[AutoPlay] 📊 Reasoning: ${decision.reasoning}`);
 
-        // Try to bet via betting service first
-        if (this.bettingService && this.bettingService.hasBettingEnabled()) {
-          const result = await this.bettingService.placeBet(
+        // Try to predict via prediction service first
+        if (this.predictionService && this.predictionService.hasBettingEnabled()) {
+          const result = await this.predictionService.placeBet(
             status.gameId || 'current',
             decision.outcome as any,
             decision.amount
@@ -205,7 +201,7 @@ export class AutoPlayService extends Service {
 
           if (result.success) {
             this.hasBet = true;
-            logger.info(`[AutoPlay] ✅ Bet placed via BettingService: ${decision.outcome} for ${decision.amount}`);
+            logger.info(`[AutoPlay] ✅ Bet placed via PredictionService: ${decision.outcome} for ${decision.amount}`);
           }
         } else {
           // Fallback: try to find bet skill in game server
@@ -299,17 +295,13 @@ export class AutoPlayService extends Service {
       const createGroupSkill = skills.find(s => s.id.includes('create-group') || s.id.includes('alliance'));
 
       if (createGroupSkill && this.a2aClient) {
-        try {
-          await this.a2aClient.sendMessage(createGroupSkill.id, {
-            name: 'Strategy Alliance',
-            members: allianceDecision.targetAgents
-          });
-          this.allianceFormed = true;
-          logger.info(`[AutoPlay] 🤝 Alliance formed with ${allianceDecision.targetAgents.length} agents`);
-          logger.info(`[AutoPlay] 📝 Reasoning: ${allianceDecision.reasoning}`);
-        } catch (err) {
-          logger.warn(`[AutoPlay] Failed to form alliance: ${err}`);
-        }
+        await this.a2aClient.sendMessage(createGroupSkill.id, {
+          name: 'Strategy Alliance',
+          members: allianceDecision.targetAgents
+        });
+        this.allianceFormed = true;
+        logger.info(`[AutoPlay] 🤝 Alliance formed with ${allianceDecision.targetAgents.length} agents`);
+        logger.info(`[AutoPlay] 📝 Reasoning: ${allianceDecision.reasoning}`);
       }
     }
   }

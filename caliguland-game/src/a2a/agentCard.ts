@@ -36,7 +36,7 @@ export function generateAgentCard(serverUrl: string): A2AAgentCard {
   return {
     protocolVersion: '0.3.0',
     name: 'VibeVM Prediction Game Master',
-    description: 'Social prediction market game with ERC-8004 trustless agents, TEE oracle, and real-time betting',
+    description: 'Social prediction market game with ERC-8004 trustless agents, TEE oracle, and real-time prediction',
     url: `${serverUrl}/a2a`,
     preferredTransport: 'JSONRPC',
     provider: {
@@ -101,14 +101,14 @@ export function generateAgentCard(serverUrl: string): A2AAgentCard {
         ]
       },
       {
-        id: 'place-bet',
-        name: 'Place Bet',
-        description: 'Bet on YES or NO outcome. Specify amount. Market odds update automatically via AMM. Betting closes at Day 29.',
-        tags: ['betting', 'market', 'prediction'],
+        id: 'make-prediction',
+        name: 'Make Prediction',
+        description: 'Predict YES or NO outcome. Specify amount. Market odds update automatically via AMM. Predictions close at Day 29.',
+        tags: ['prediction', 'market', 'prediction'],
         examples: [
-          'Bet 500 on YES',
-          'Place 100 tokens on NO',
-          'I want to bet YES with 300'
+          'Predict 500 on YES',
+          'Predict 100 tokens on NO',
+          'I want to predict YES with 300'
         ]
       },
       {
@@ -121,8 +121,8 @@ export function generateAgentCard(serverUrl: string): A2AAgentCard {
       {
         id: 'get-market',
         name: 'Get Market State',
-        description: 'Get current betting odds, total volume, and bet distribution. Use to gauge crowd sentiment.',
-        tags: ['market', 'betting', 'query'],
+        description: 'Get current market odds, total volume, and prediction distribution. Use to gauge crowd sentiment.',
+        tags: ['market', 'prediction', 'query'],
         examples: ['Show market odds', 'What are the current odds?', 'Get market state']
       },
       {

@@ -5,7 +5,7 @@
  *
  * Prerequisites:
  * 1. Localnet running (anvil)
- * 2. Contracts deployed (JejuMarket, ElizaToken, PredictionOracle, ReputationRegistry)
+ * 2. Contracts deployed (Predimarket, ElizaToken, PredictionOracle, ReputationRegistry)
  * 3. .env.local configured with correct addresses
  *
  * Run with: bun run test:e2e
@@ -23,7 +23,7 @@ const config: BlockchainConfig = {
   chainId: parseInt(process.env.CHAIN_ID || '1337'),
   privateKey: process.env.PRIVATE_KEY || '0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6',
   contracts: {
-    jejuMarket: process.env.JEJU_MARKET_ADDRESS || '0x0000000000000000000000000000000000000000',
+    jejuMarket: process.env.PREDIMARKET_ADDRESS || '0x0000000000000000000000000000000000000000',
     elizaToken: process.env.ELIZA_TOKEN_ADDRESS || '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
     predictionOracle: process.env.PREDICTION_ORACLE_ADDRESS || '0x0000000000000000000000000000000000000000',
     reputationRegistry: process.env.REPUTATION_REGISTRY_ADDRESS || '0x0000000000000000000000000000000000000000'
@@ -87,14 +87,14 @@ describe('Blockchain Integration E2E', () => {
     // Check server wallet balance
     const serverBalance = await adapter.getBalance();
     console.log(`   Server wallet: ${adapter.getAddress()}`);
-    console.log(`   ELIZA balance: ${ethers.formatEther(serverBalance)}`);
+    console.log(`   elizaOS balance: ${ethers.formatEther(serverBalance)}`);
 
     expect(serverBalance).toBeGreaterThan(0n);
 
     // Check test account balances
     for (const [name, account] of Object.entries(testAccounts)) {
       const balance = await adapter.getBalance(account.address);
-      console.log(`   ${name}: ${ethers.formatEther(balance)} ELIZA`);
+      console.log(`   ${name}: ${ethers.formatEther(balance)} elizaOS`);
     }
   });
 
@@ -157,7 +157,7 @@ describe('Blockchain Integration E2E', () => {
     const testSessionId = 'bet-test-' + Date.now();
 
     // Place bet as Alice (YES)
-    console.log('   Alice betting 10 ELIZA on YES...');
+    console.log('   Alice predicting 10 elizaOS on YES...');
     const aliceBet = await adapter.placeBet(
       testSessionId,
       testAccounts.alice.address,
@@ -227,7 +227,7 @@ describe('Blockchain Integration E2E', () => {
       // Claim payout
       const payout = await adapter.claimPayout(testSessionId, testAccounts.alice.address);
       if (payout) {
-        console.log(`   💸 Payout claimed: ${ethers.formatEther(payout)} ELIZA`);
+        console.log(`   💸 Payout claimed: ${ethers.formatEther(payout)} elizaOS`);
         expect(payout).toBeGreaterThan(0n);
       }
     } else {

@@ -24,7 +24,7 @@ export { ProfileHeader } from './ProfileHeader';
 export { PlayerProfile } from './PlayerProfile';
 export { NPCProfile } from './NPCProfile';
 export { StatsCard } from './StatsCard';
-export { BettingHistory } from './BettingHistory';
+export { PredictionHistory } from './PredictionHistory';
 export { FollowList } from './FollowList';
 
 // Re-export types for convenience
@@ -97,9 +97,9 @@ export type {
 } from './StatsCard';
 
 export type {
-  BettingHistoryProps,
-  BettingHistoryEntry,
-} from './BettingHistory';
+  PredictionHistoryProps,
+  PredictionHistoryEntry,
+} from './PredictionHistory';
 
 export type {
   FollowListProps,

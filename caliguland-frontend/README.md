@@ -56,7 +56,7 @@ caliguland-frontend/
 │   │   ├── Lobby.tsx       # Join game screen
 │   │   ├── GameBoard.tsx   # Main game view
 │   │   ├── Feed.tsx        # Social feed
-│   │   ├── BettingPanel.tsx # Betting interface
+│   │   ├── PredictionPanel.tsx # Betting interface
 │   │   ├── MarketDisplay.tsx # Odds display
 │   │   └── PlayersList.tsx  # Player list
 │   ├── services/           # API & WebSocket
@@ -173,7 +173,7 @@ Social timeline with:
 - Post input (280 chars)
 - Real-time updates
 
-### BettingPanel
+### PredictionPanel
 Betting interface with:
 - YES/NO selection
 - Amount slider (10-1000)
