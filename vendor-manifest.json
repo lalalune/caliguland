@@ -1,0 +1,26 @@
+{
+  "name": "caliguland",
+  "displayName": "Caliguland (VibeVM Prediction Game)",
+  "version": "0.1.0",
+  "description": "Social prediction market game with TEE oracle, A2A/MCP protocols, and ElizaOS agents",
+  "commands": {
+    "dev": "bun run dev",
+    "build": "bun run build",
+    "test": "bun run test",
+    "start": "bun run start"
+  },
+  "ports": {
+    "game": 8000,
+    "frontend": 5666,
+    "auth": 3000
+  },
+  "dependencies": ["contracts", "shared"],
+  "optional": true,
+  "enabled": true,
+  "tags": ["game", "prediction-market", "social", "erc-8004"],
+  "healthCheck": {
+    "url": "http://localhost:8000/health",
+    "interval": 5000
+  }
+}
+
